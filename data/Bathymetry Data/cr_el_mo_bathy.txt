@@ -1,0 +1,60 @@
+lakeID	lakeName	depth_m	area_m2	sedimentArea3D_m2	layerVolume_m3	volumeToBottom_m3	volumeToBottom3D_m3	source	metadataID	updateID
+CR	Crampton	0	258924.72	NA	0	0	1302506.45	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	0.5	250570.32	NA	0	0	1177177.34	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	1	241422.25	NA	0	0	1056210.7	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	1.5	230037.27	NA	0	0	940072.23	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	2	213789.77	NA	0	0	830727.99	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	2.5	191678.41	NA	0	0	730788.1	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	3	169216.84	NA	0	0	642878.26	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	3.5	153524.9	NA	0	0	563719.92	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	4	137328.22	NA	0	0	492657.96	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	4.5	124871.75	NA	0	0	428657.46	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	5	111853.08	NA	0	0	370728.04	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	5.5	100091.49	NA	0	0	319177.69	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	6	88977.33	NA	0	0	273098.5	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	6.5	77869.89	NA	0	0	232519.25	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	7	66752.67	NA	0	0	197354.76	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	7.5	57385.03	NA	0	0	167442.04	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	8	50479.88	NA	0	0	141338.06	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	8.5	44025.53	NA	0	0	118451.75	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	9	36997.26	NA	0	0	98833.22	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	9.5	31584.1	NA	0	0	82321.56	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	10	27198.5	NA	0	0	68162.82	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	10.5	22579.01	NA	0	0	56112.6	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	11	19193.48	NA	0	0	46129.1	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	11.5	16467.17	NA	0	0	37573.48	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	12	14125.5	NA	0	0	30245.41	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	12.5	12208.11	NA	0	0	23917.09	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	13	10279.59	NA	0	0	18523.38	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	13.5	8638.92	NA	0	0	13966.79	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	14	6890.42	NA	0	0	10239.23	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	14.5	5484.74	NA	0	0	7274.95	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	15	4194.64	NA	0	0	4935.83	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	15.5	2904.4	NA	0	0	3266.06	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	16	2146.41	NA	0	0	2060.78	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	16.5	1585.01	NA	0	0	1160.99	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	17	1019.6	NA	0	0	530.95	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	17.5	467.7	NA	0	0	172.14	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	18	149.82	NA	0	0	32.61	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+CR	Crampton	18.5	10.4	NA	0	0	0.84	Cascade_2005	LakeBathymetry.20130325	originalDB.20160217
+EL	East Long	0	31869.25	32620.01	53127.81	128699.91	123734.26	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+EL	East Long	2	21591.01	22126.49	34036.08	75572.09	71431.14	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+EL	East Long	4	12823.58	13174.87	19843.76	41536	40310.76	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+EL	East Long	6	7279.99	7505.18	11105.69	11105.69	21121.99	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+EL	East Long	8	3989.4	4141.96	6087.07	10586.53	10359.71	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+EL	East Long	10	2187.25	2273.05	3143.25	4499.46	4434.27	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+EL	East Long	12	1028.07	1064.67	1356.2	1356.2	1332.09	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+EL	East Long	14	380.65	380.66	0	0	0	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+MO	Morris	0	58818.49	NA	32543.94	142454.06	NA	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+MO	Morris	0.6	48131.4	NA	27177.23	109910.12	NA	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+MO	Morris	1.21	41124.56	NA	23358.9	82732.88	NA	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+MO	Morris	1.82	35579.17	NA	19529.41	59373.98	NA	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+MO	Morris	2.43	28619.79	NA	15921.93	39844.57	NA	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+MO	Morris	3.04	23694.97	NA	12235.3	23922.63	NA	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+MO	Morris	3.65	16653.49	NA	2322.05	11687.32	NA	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+MO	Morris	3.96	1390.03	NA	1780.63	9365.27	NA	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+MO	Morris	4.26	12044.18	NA	4805.7	7584.64	NA	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+MO	Morris	4.87	4359.66	NA	1868.17	2778.93	NA	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+MO	Morris	5.48	1931.94	NA	744.74	910.76	NA	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+MO	Morris	6.09	629.95	NA	166.01	166.01	NA	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
+MO	Morris	6.7	36.14	NA	0	0	NA	M2M 2013 - GIS digitized UNDERC maps	LakeBathymetry.20130325	originalDB.20160217
