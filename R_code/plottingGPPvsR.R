@@ -1,9 +1,8 @@
 # plotting GPP vs. R and color coding by season; JAZ & JK; 2018-03-09
 
-library(xlsx)
 library(dplyr)
 
-dir<-'/Users/jzwart/Documents/Jake/MyPapers/GLEON Catchment & Lake Metabolism/metab results/20161107/' # directory of metabolism data
+dir<-'results/metab/20161107/' # directory of metabolism data
 folders<-list.files(dir) # folders in this dir
 folders<-folders[-grep('.doc',folders)] # get rid of README doc
 folders<-folders[-grep('Trout',folders)] # skipping trout for now; have to do bootstrapping on this still
@@ -20,7 +19,7 @@ for(i in 1:length(folders)){ # loops over all folders in metab directory
 all_metab$date<-as.Date(paste(all_metab$year,all_metab$doy),format='%Y %j') # making date
 all_metab <- as_tibble(all_metab)
 
-season_cutoff <- readRDS('/Users/jzwart/Documents/Jake/MyPapers/GLEON Catchment & Lake Metabolism/Results/z_scored_schmidt.rds') # seasonal cutoff based on z-scored schmidt stability
+season_cutoff <- readRDS('results/z_scored_schmidt.rds') # seasonal cutoff based on z-scored schmidt stability
 all_metab <- left_join(all_metab, season_cutoff, by = c('lake' = 'lake', 'date' = 'date'))
 
 # season cutoffs used by Jim ; can change if needed

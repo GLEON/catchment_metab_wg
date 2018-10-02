@@ -11,7 +11,7 @@
 library(ggplot2)
 library(dplyr)
 
-dir<-'/Users/jzwart/Documents/Jake/MyPapers/GLEON Catchment & Lake Metabolism/buoyancy freq/' # directory of metabolism data
+dir<-'data/buoyancy freq/' # directory of metabolism data
 files<-list.files(dir) %>% # folders in this dir
   tbl_df() %>%
   dplyr::filter(!grepl('.doc|Trout', value)) # get rid of README doc; skipping trout for now --> have to do bootstrapping on this still
@@ -104,7 +104,7 @@ ggplot(out, aes(x = date, y = n2, color = season)) +
 library(ggplot2)
 library(dplyr)
 
-dir<-'/Users/jzwart/Documents/Jake/MyPapers/GLEON Catchment & Lake Metabolism/schmidt stability/' # directory of metabolism data
+dir<-'data/schmidt stability/' # directory of metabolism data
 files<-list.files(dir) %>% # folders in this dir
   tbl_df() %>%
   dplyr::filter(!grepl('.doc|Trout', value)) # get rid of README doc; skipping trout for now --> have to do bootstrapping on this still
@@ -156,7 +156,7 @@ out <- agg %>%
            doy > fall_start & doy < 350 ~ 'fall')) %>%
   ungroup()
 
-saveRDS(out, '/Users/jzwart/Documents/Jake/MyPapers/GLEON Catchment & Lake Metabolism/Results/z_scored_schmidt.rds')
+saveRDS(out, 'results/z_scored_schmidt.rds')
 
 windows()
 ggplot(out, aes(x = date, y = z_schmidt.stability, color = season)) +
@@ -198,7 +198,7 @@ ggplot(out, aes(x = date, y = schmidt.stability, color = season)) +
 library(ggplot2)
 library(dplyr)
 
-dir<-'/Users/jzwart/Documents/Jake/MyPapers/GLEON Catchment & Lake Metabolism/lake number/' # directory of metabolism data
+dir<-'data/lake number/' # directory of metabolism data
 files<-list.files(dir) %>% # folders in this dir
   tbl_df() %>%
   dplyr::filter(!grepl('.doc|Trout', value)) # get rid of README doc; skipping trout for now --> have to do bootstrapping on this still

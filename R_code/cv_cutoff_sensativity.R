@@ -1,7 +1,8 @@
 # sensativity in analysis to changing CV cutoff
 library(ggplot2)
+library(dplyr)
 
-dir<-'/Users/jzwart/Documents/Jake/MyPapers/GLEON Catchment & Lake Metabolism/metab results/20161107/' # directory of metabolism data
+dir<-'results/metab/20161107/' # directory of metabolism data
 folders<-list.files(dir) %>% # folders in this dir
   tbl_df() %>%
   dplyr::filter(!grepl('.doc|Trout', value)) # get rid of README doc; skipping trout for now --> have to do bootstrapping on this still
