@@ -1,0 +1,32 @@
+Site	dateTime	TP	TN				
+epilimnion	2014-06-05 00:00	28	389				
+epilimnion	2014-06-12 00:00	17	449				
+epilimnion	2014-06-18 00:00	60	643				
+epilimnion	2014-06-26 00:00	16	413				
+epilimnion	2014-07-02 00:00	25	421				
+epilimnion	2014-07-17 00:00	35	496				
+epilimnion	2014-07-23 00:00	73	791				
+epilimnion	2014-07-30 00:00	34	517				
+epilimnion	2014-08-07 00:00	42	657				
+epilimnion	2014-08-13 00:00	23	471				
+epilimnion	2014-08-20 00:00	23	482				
+epilimnion	2014-08-27 00:00	28	449				
+epilimnion	2014-09-04 00:00	32	565				
+epilimnion	2014-09-11 00:00	29	506				
+epilimnion	2014-09-18 00:00	20	491
+epilimnion	2014-10-03 oo:00	13	387				
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							

@@ -1,0 +1,6 @@
+site	dateTime	TP	TN	DOC	Ammonia	Nitrite	Nitrate	Orthophosphate
+housatonic	2014-05-28 11:15	29	730	3.4	2	6	366	6
+housatonic	2014-06-24 12:30	26	500	NA	< 10	4	149	< 4
+housatonic	2014-07-28 12:45	41	580	4.4	< 10	5	272	10
+housatonic	2014-08-13 13:45	40	480	NA	< 10	2	202	< 4
+housatonic	2014-09-11 12:15	15	710	NA	< 10	4	439	< 4
