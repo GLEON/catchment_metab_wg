@@ -137,7 +137,7 @@ logged=T # whether or not to log /exponentiate parameter estimates for constrain
 bootstrap=T # whether or not to bootstrap the fits to produce distribution of fitted parameters (uncertainty in parameter estimate)
 n.boot=1000 # how many iterations in bootstrapping if bootstrap = T
 ar1.resids=T # maintain autocorrelation in residuals when bootstrapping if True
-guesses=c(1E-4,1E-4) # MLE guesses for gppCoeff and rCoeff
+guesses=c(1E-3,1E-3) # MLE guesses for gppCoeff and rCoeff
 # guesses=c(1E-1,1E-4,1E-4) # MLE guess for gppMaxCoeff, gppCoeff, and rCoeff for light saturating function
 nDaysSim=1 #number of days over which to estimate metab coefficients
 optim_method='Nelder-Mead'
