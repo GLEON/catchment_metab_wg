@@ -10,7 +10,7 @@
 
 library(xlsx)
 
-dir<-'C:/Users/jklug/Documents/catchment_metab_wg/results/metab/20161107/' # directory of metabolism data
+dir<-'results/metab/20161107/' # directory of metabolism data
 folders<-list.files(dir) # folders in this dir
 folders<-folders[-grep('.doc',folders)] # get rid of README doc
 folders<-folders[-grep('Trout',folders)] # skipping trout for now; have to do bootstrapping on this still
@@ -36,7 +36,7 @@ all_metab$season <- ifelse(all_metab$doy>=180&all_metab$doy<=240,'summer',all_me
 all_metab$season <- ifelse(all_metab$doy>240&all_metab$doy<305,'fall',all_metab$season)
 
 #loop below creates one dataframe with all loading data in it - JK modifying the loop JZ created above for metabolism
-dir<-'C:/Users/jklug/Documents/catchment_metab_wg/results/nutrient load/' # directory of loading data
+dir<-'results/nutrient load/' # directory of loading data
 folders<-list.files(dir) # folders in this dir (in this case there are only files no folders)
 folders<-folders[-grep('Readme',folders)] # get rid of README doc
 folders<-folders[-grep('Trout',folders)] # skipping trout for now; have to do bootstrapping on this still
@@ -52,7 +52,7 @@ for(i in 1:length(folders)){ # loops over all folders in loads directory, needed
 all_load$loginflow<- log(all_load$inflow)
 
 #merging loads and metabolism data into one dataframe
-#this is currently not working 100% because of difference in lake names in the two dataframes
+#does not include lakes without inflows or Mendota (no load yet as of 10/28/18)
 
 all_metabload<-merge(all_metab, all_load, by=c('lake','doy')) #does not include lakes without inflows or Mendota (no load)
 all_metabload$DOC_TP<-all_metabload$DOC_load/all_metabload$TP_load #creating DOC:TP column
@@ -60,7 +60,7 @@ all_metabload$TN_TP<-all_metabload$TN_load/all_metabload$TP_load #creating TP:TN
 
 
 #loop below creates one dataframe with all schmidt stability data in it - JK modifying JZ allmetab loop
-dir<-'C:/Users/jklug/Documents/catchment_metab_wg/data/schmidt stability/' # directory of stability data
+dir<-'data/schmidt stability/' # directory of stability data
 files<-list.files(dir) # files in this dir
 
 all_st<-data.frame() # data frame to store all stability data, this data are not summarized by day
@@ -82,13 +82,6 @@ ave_st<-aggregate(all_st, by=list(all_st$doy,all_st$lake),
 ave_st<-ave_st[c(-3,-5,-6)]
 names(ave_st)[1] <- "doy"
 names(ave_st)[2]<-"lake"
-
-
-#merging loads and metabolism data into one dataframe
-#does not include lakes without inflows or Mendota (no load yet as of 10/28/18)
-
-all_metabload<-merge(all_metab, all_load, by=c('lake','doy'))
-
 
 #merging stability and metabolism data into one dataframe
 
@@ -128,10 +121,8 @@ for(i in 1:length(unique(all_metab$lake))){ # looping through each lake
 }
 
 # plotting GPP vs. R colored by 3rd variable (using either all_metabload or all_metabst)
-#current code codes by DOC:TP
-#something is wrong with this loop - only plotting 9 lakes when using all_metabload
-#this is a merging issue - some of the lake names are not consistent in the metab results
-#relative to the nutrient load results
+#current code codes by TP_load
+
 cv_thres = 4  #cutoff for keeping metabolism data
 windows() #don't use when plotting each lake separately
 par(mfrow=c(4,4)) # how many panels on graph (alternatively we could call a new window in every iteration of for loop)
