@@ -33,7 +33,8 @@ metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP 
   mutate(mean_gpp = mean(GPP, na.rm=T)) %>%
   ungroup() %>%
   mutate(lake = factor(lake),
-         season = factor(season))
+         season = factor(season),
+         plot_date = as.Date(paste('2001-',doy,sep=''), format = '%Y-%j', tz ='GMT'))
 
 #ordering by mean GPP
 lakes_sorted <- metab_plot$lake[sort.list(metab_plot$mean_gpp)]
@@ -64,21 +65,16 @@ lake_names <- c('Acton' = 'Acton Lake',
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7") # colorblind-friendly pallete
 
 # keeping x and y axis scales the same for every plot
-metab <- ggplot(metab_plot, aes(x = doy, y = GPP, group = lake ,color = season)) +
+metab <- ggplot(metab_plot, aes(x = plot_date, y = GPP, group = lake ,color = season)) +
   geom_line(size = 1) +
-  # geom_ribbon(data = metab_plot,
-  #             aes(x = doy, ymax = GPP + GPP_SD, ymin = GPP - GPP_SD, group = season, color = season, fill = season),
-  #             alpha = .2, size = .5, show.legend = F) +
-  # geom_ribbon(data = metab_plot,
-  #             aes(x = doy, ymax = R + R_SD, ymin = R - R_SD, group = season, color = season, fill = season),
-  #             alpha = .2, size = .5, show.legend = F) +
-  geom_line(data = metab_plot, aes( x= doy, y = R, group = lake), size = 1) +
+  geom_line(data = metab_plot, aes( x= plot_date, y = R, group = lake), size = 1) +
   facet_wrap(~lake,labeller = as_labeller(lake_names), strip.position = 'top') +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
         axis.title = element_text(size = 16),
         axis.text = element_text(size = 12),
+        axis.title.x = element_blank(),
         legend.title = element_blank(),
         legend.text = element_text(size =12)) +
   scale_color_manual(name = 'season',
@@ -92,9 +88,9 @@ metab <- ggplot(metab_plot, aes(x = doy, y = GPP, group = lake ,color = season))
                                 'fall' = '#E69F00'),
                      labels = c('Spring', 'Summer', 'Fall')) +
   ylab(expression(Metabolism~(mg~O[2]~L^-1~day^-1))) +
-  xlab(expression(Day~of~Year)) +
   geom_hline(yintercept = 0, linetype = 'dashed', color = 'grey')
 
-
 metab
+
+ggsave('figures/fig_metab_timeseries.png', plot = metab, width = 10, height = 10)
 
