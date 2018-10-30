@@ -93,7 +93,7 @@ load <- ggplot(load_plot, aes(x = plot_date, y = TP_load * 1000 *1000/ Volume..m
                                 'summer' = '#56B4E9',
                                 'fall' = '#E69F00'),
                      labels = c('Spring', 'Summer', 'Fall')) +
-  ylab(expression(TP~Load~(mg^3~m^-3~day^-1)))  +
+  ylab(expression(TP~Load~(mg~m^-3~day^-1)))  +
   scale_y_log10()
 
 load
