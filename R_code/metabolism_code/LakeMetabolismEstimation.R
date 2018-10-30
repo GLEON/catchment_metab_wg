@@ -2,7 +2,7 @@
 # 2015-05-19;
 # for(i in 12:17){
 
-i=1
+i=8
 toRm=ls()
 toRm=toRm[-which(toRm=='i')]
 rm(list=toRm)
@@ -132,12 +132,12 @@ ts.data$sunrise<-sun$sunrise
 
 # metabolism function requires do.obs, do.sat, irr, k.gas, z.mix, wtr (wtr at depth of DO probe )
 # metab.out<-metab(ts.data,method = 'mle',wtr.name = colnames(ts.data[grep('wtr',colnames(ts.data))]),irr.name = 'par',do.obs.name = 'doobs')
-error.type='OE' # observation error or process error specification for MLE (OE fits initial DO)
+error.type='PE' # observation error or process error specification for MLE (OE fits initial DO)
 logged=T # whether or not to log /exponentiate parameter estimates for constraining positive /negative
-bootstrap=F # whether or not to bootstrap the fits to produce distribution of fitted parameters (uncertainty in parameter estimate)
+bootstrap=T # whether or not to bootstrap the fits to produce distribution of fitted parameters (uncertainty in parameter estimate)
 n.boot=1000 # how many iterations in bootstrapping if bootstrap = T
 ar1.resids=T # maintain autocorrelation in residuals when bootstrapping if True
-guesses=c(1E-5,1E-5) # MLE guesses for gppCoeff and rCoeff
+guesses=c(1E-3,1E-3) # MLE guesses for gppCoeff and rCoeff
 # guesses=c(1E-1,1E-4,1E-4) # MLE guess for gppMaxCoeff, gppCoeff, and rCoeff for light saturating function
 nDaysSim=1 #number of days over which to estimate metab coefficients
 optim_method='Nelder-Mead'
@@ -147,7 +147,8 @@ sunrise=T # if True, fit model from sunrise to sunrise
 # dyn.load('/Users/Jake/Desktop/mleLoopLightSat.dll') # loading in compiled C code for looping
 
 metab.out<-my.metab(data=ts.data,method = 'mle',wtr.name = colnames(ts.data[grep('wtr',colnames(ts.data))]),
-                            irr.name = 'par',do.obs.name = 'doobs',error.type=error.type,logged=logged, bootstrap=bootstrap,n.boot=n.boot,ar1.resids=ar1.resids,
+                            irr.name = 'par',do.obs.name = 'doobs',error.type=error.type,logged=logged,
+                    bootstrap=bootstrap,n.boot=n.boot,ar1.resids=ar1.resids,
                     guesses=guesses,nDaysSim=nDaysSim,optim_method=optim_method,sunrise=sunrise)
 # metab.out<-metab(data=ts.data,method = 'bookkeep',wtr.name = colnames(ts.data[grep('wtr',colnames(ts.data))]),
 #                     irr.name = 'par',do.obs.name = 'doobs',lake.lat=lat)
@@ -302,6 +303,10 @@ dev.off()
 
 write.table(metab.out,
             file.path('results/metab/20161107/',lake,paste(lake,'metabEst.txt',sep='_')),
+            row.names=F,sep='\t',quote=F)
+
+write.table(pars,
+            file.path('results/metab/20161107/',lake,paste(lake,'gpp_r_coeff.txt',sep='_')),
             row.names=F,sep='\t',quote=F)
 
 # }

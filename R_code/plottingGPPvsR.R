@@ -167,8 +167,8 @@ gpp=aggregate(all_metab$GPP[all_metab$GPP_SD/all_metab$GPP<cv_thres&all_metab$R_
 r=aggregate(all_metab$R[all_metab$GPP_SD/all_metab$GPP<cv_thres&all_metab$R_SD/all_metab$R<cv_thres&!is.na(all_metab$season)]~all_metab$lake[all_metab$GPP_SD/all_metab$GPP<cv_thres&all_metab$R_SD/all_metab$R<cv_thres&!is.na(all_metab$season)],FUN = mean)
 ylim=c(min(c(r[,2],-gpp[,2]),na.rm = T),0)
 xlim=c(0,max(c(gpp[,2],-r[,2]),na.rm = T))
-ylim=c(-2.5,0)
-xlim=c(0,2.5)
+# ylim=c(-2.5,0)
+# xlim=c(0,2.5)
 cex=2
 for(j in 1:length(season)){
 for(i in 1:length(unique(all_metab$lake))){ # looping through each lake
