@@ -76,7 +76,7 @@ cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
 
 # keeping x and y axis scales the same for every plot
 stoich <- ggplot(load_plot, aes(x = plot_date, y = TN_load/TP_load, group = lake)) +
-  geom_line(size = 1, aes(color = '#CC79A7')) +
+  geom_line(size = 1, color = '#CC79A7') +
   geom_line(data = load_plot, aes(x = plot_date, y = DOC_load / TP_load, group = lake), size = 1, color = 'black')+
   geom_line(data = load_plot, aes(x = plot_date, y = DOC_load / TN_load, group = lake), size = 1, color = '#D55E00')+
   facet_wrap(~lake, labeller = as_labeller(lake_names), strip.position = 'top') +
@@ -98,5 +98,5 @@ stoich <- ggplot(load_plot, aes(x = plot_date, y = TN_load/TP_load, group = lake
 
 stoich
 
-ggsave('figures/fig_tp_load_timeseries.png', plot = load, width = 10, height = 10)
+ggsave('figures/fig_stoich_timeseries.png', plot = stoich, width = 10, height = 10)
 
