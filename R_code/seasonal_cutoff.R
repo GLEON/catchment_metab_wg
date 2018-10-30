@@ -8,95 +8,95 @@
 #      - Use surface water temp from dimictic lakes when stratification sets up to apply to non-dimictic lakes for spring / fall cutoff.
 
 ################################
-library(ggplot2)
-library(dplyr)
+# library(ggplot2)
+# library(dplyr)
 
-dir<-'data/buoyancy freq/' # directory of metabolism data
-files<-list.files(dir) %>% # folders in this dir
-  tbl_df() %>%
-  dplyr::filter(!grepl('.doc|Trout', value)) # get rid of README doc; skipping trout for now --> have to do bootstrapping on this still
-
-all <- lapply(files$value, function(file){
-  cur = read.table(file.path(dir,file), header=T, sep='\t', stringsAsFactors = F) %>%
-    mutate(lake = strsplit(file, '_buo')[[1]][1],
-           date = as.Date(datetime))
-}) %>% bind_rows()
-
-agg <- all %>%
-  group_by(lake) %>%
-  mutate(z_n2 = (n2 - mean(n2, na.rm=T)) / sd(n2, na.rm =T)) %>%
-  ungroup() %>%
-  group_by(lake, date) %>%
-  summarise(n2 = mean(n2, na.rm = T),
-            z_n2 = mean(z_n2, na.rm = T)) %>%
-  ungroup()
-
-n2_cutoff <- 0.004
-
-windows()
-ggplot(agg, aes(x = date, y = n2)) +
-  geom_point() +
-  geom_hline(yintercept = n2_cutoff) +
-  facet_wrap(~lake, scales = 'free') +
-  theme_classic()
-
-# use z score for n2 cuttoff?
-z_n2_cutoff = 0
-
-windows()
-ggplot(agg, aes(x = date, y = z_n2)) +
-  geom_point() +
-  geom_hline(yintercept = z_n2_cutoff) +
-  facet_wrap(~lake, scales = 'free') +
-  theme_classic()
-
-
-out <- agg %>%
-  group_by(lake) %>%
-  mutate(doy = as.numeric(strftime(date, format = '%j', tz ='GMT')),
-         spring_end = min(doy[z_n2>z_n2_cutoff], na.rm=T), # earliest date that buoyancy frequency exceeds threshold
-         fall_start = min(doy[z_n2<z_n2_cutoff & doy > spring_end + 80], na.rm=T), # earliest date that buoyancy frequency is less than threshold and more than 2 months past start of summer
-         season = case_when(
-           doy < spring_end & doy > 80 ~ 'spring',
-           doy >= spring_end & doy <= fall_start ~ 'summer',
-           doy > fall_start & doy < 350 ~ 'fall')) %>%
-  ungroup()
-
-
-windows()
-ggplot(out, aes(x = date, y = z_n2, color = season)) +
-  geom_point() +
-  geom_hline(yintercept = z_n2_cutoff) +
-  facet_wrap(~lake, scales = 'free') +
-  theme_classic()
-
-# using z-score cutoff:
-#   - average fall start is DOY 243, with range of 229 to 275
-#   - average spring end is DOY 154, with range of 126 to 185
-
-
-# using non-z-scored cutoff; it seems like buoyancy frequency is dependent on measurement depths which is why z-score may be better choice
-out <- agg %>%
-  group_by(lake) %>%
-  mutate(doy = as.numeric(strftime(date, format = '%j', tz ='GMT')),
-         spring_end = min(doy[n2>n2_cutoff], na.rm=T), # earliest date that buoyancy frequency exceeds threshold
-         fall_start = min(doy[n2<n2_cutoff & doy > spring_end + 80], na.rm=T), # earliest date that buoyancy frequency is less than threshold and more than 2 months past start of summer
-         season = case_when(
-           doy < spring_end & doy > 80 ~ 'spring',
-           doy >= spring_end & doy <= fall_start ~ 'summer',
-           doy > fall_start & doy < 350 ~ 'fall')) %>%
-  ungroup()
-
-# using non-z-score cutoff:
-#   - average fall start is DOY 250, with range of 238 to 276
-#   - average spring end is DOY 146, with range of 118 to 185
-
-windows()
-ggplot(out, aes(x = date, y = n2, color = season)) +
-  geom_point() +
-  geom_hline(yintercept = n2_cutoff) +
-  facet_wrap(~lake, scales = 'free') +
-  theme_classic()
+# dir<-'data/buoyancy freq/' # directory of metabolism data
+# files<-list.files(dir) %>% # folders in this dir
+#   tbl_df() %>%
+#   dplyr::filter(!grepl('.doc|Trout', value)) # get rid of README doc; skipping trout for now --> have to do bootstrapping on this still
+#
+# all <- lapply(files$value, function(file){
+#   cur = read.table(file.path(dir,file), header=T, sep='\t', stringsAsFactors = F) %>%
+#     mutate(lake = strsplit(file, '_buo')[[1]][1],
+#            date = as.Date(datetime))
+# }) %>% bind_rows()
+#
+# agg <- all %>%
+#   group_by(lake) %>%
+#   mutate(z_n2 = (n2 - mean(n2, na.rm=T)) / sd(n2, na.rm =T)) %>%
+#   ungroup() %>%
+#   group_by(lake, date) %>%
+#   summarise(n2 = mean(n2, na.rm = T),
+#             z_n2 = mean(z_n2, na.rm = T)) %>%
+#   ungroup()
+#
+# n2_cutoff <- 0.004
+#
+# windows()
+# ggplot(agg, aes(x = date, y = n2)) +
+#   geom_point() +
+#   geom_hline(yintercept = n2_cutoff) +
+#   facet_wrap(~lake, scales = 'free') +
+#   theme_classic()
+#
+# # use z score for n2 cuttoff?
+# z_n2_cutoff = 0
+#
+# windows()
+# ggplot(agg, aes(x = date, y = z_n2)) +
+#   geom_point() +
+#   geom_hline(yintercept = z_n2_cutoff) +
+#   facet_wrap(~lake, scales = 'free') +
+#   theme_classic()
+#
+#
+# out <- agg %>%
+#   group_by(lake) %>%
+#   mutate(doy = as.numeric(strftime(date, format = '%j', tz ='GMT')),
+#          spring_end = min(doy[z_n2>z_n2_cutoff], na.rm=T), # earliest date that buoyancy frequency exceeds threshold
+#          fall_start = min(doy[z_n2<z_n2_cutoff & doy > spring_end + 80], na.rm=T), # earliest date that buoyancy frequency is less than threshold and more than 2 months past start of summer
+#          season = case_when(
+#            doy < spring_end & doy > 80 ~ 'spring',
+#            doy >= spring_end & doy <= fall_start ~ 'summer',
+#            doy > fall_start & doy < 350 ~ 'fall')) %>%
+#   ungroup()
+#
+#
+# windows()
+# ggplot(out, aes(x = date, y = z_n2, color = season)) +
+#   geom_point() +
+#   geom_hline(yintercept = z_n2_cutoff) +
+#   facet_wrap(~lake, scales = 'free') +
+#   theme_classic()
+#
+# # using z-score cutoff:
+# #   - average fall start is DOY 243, with range of 229 to 275
+# #   - average spring end is DOY 154, with range of 126 to 185
+#
+#
+# # using non-z-scored cutoff; it seems like buoyancy frequency is dependent on measurement depths which is why z-score may be better choice
+# out <- agg %>%
+#   group_by(lake) %>%
+#   mutate(doy = as.numeric(strftime(date, format = '%j', tz ='GMT')),
+#          spring_end = min(doy[n2>n2_cutoff], na.rm=T), # earliest date that buoyancy frequency exceeds threshold
+#          fall_start = min(doy[n2<n2_cutoff & doy > spring_end + 80], na.rm=T), # earliest date that buoyancy frequency is less than threshold and more than 2 months past start of summer
+#          season = case_when(
+#            doy < spring_end & doy > 80 ~ 'spring',
+#            doy >= spring_end & doy <= fall_start ~ 'summer',
+#            doy > fall_start & doy < 350 ~ 'fall')) %>%
+#   ungroup()
+#
+# # using non-z-score cutoff:
+# #   - average fall start is DOY 250, with range of 238 to 276
+# #   - average spring end is DOY 146, with range of 118 to 185
+#
+# windows()
+# ggplot(out, aes(x = date, y = n2, color = season)) +
+#   geom_point() +
+#   geom_hline(yintercept = n2_cutoff) +
+#   facet_wrap(~lake, scales = 'free') +
+#   theme_classic()
 
 ##########################################################################
 # schmidt stability cutoff
@@ -144,19 +144,41 @@ ggplot(agg, aes(x = date, y = z_schmidt.stability)) +
   facet_wrap(~lake, scales = 'free') +
   theme_classic()
 
+# notes from conference call:
+#   Need to have 5 consecutive days above 0 to be considered summer
+#   We could do anything below zero + before a certain date (e.g. May 10) is spring.
+#  Every lake looks pretty good using the method below except for Lillinonah and Vortsjarv -
+      # we could make these have a summer / fall start of the average of the other lakes...
 
 out <- agg %>%
   group_by(lake) %>%
   mutate(doy = as.numeric(strftime(date, format = '%j', tz ='GMT')),
-         spring_end = min(doy[z_schmidt.stability>z_schmidt.stability_cutoff], na.rm=T), # earliest date that buoyancy frequency exceeds threshold
-         fall_start = min(doy[z_schmidt.stability<z_schmidt.stability_cutoff & doy > spring_end + 80], na.rm=T), # earliest date that buoyancy frequency is less than threshold and more than 2 months past start of summer
+         spring_end = min(doy[z_schmidt.stability>z_schmidt.stability_cutoff], na.rm=T), # earliest date that schmidt stability  exceeds threshold
+         fall_start = min(doy[z_schmidt.stability<z_schmidt.stability_cutoff & doy > spring_end + 80], na.rm=T), # earliest date that schmidt stability  is less than threshold and more than 2 months past start of summer
          season = case_when(
            doy < spring_end & doy > 80 ~ 'spring',
            doy >= spring_end & doy <= fall_start ~ 'summer',
            doy > fall_start & doy < 350 ~ 'fall')) %>%
   ungroup()
 
-saveRDS(out, 'results/z_scored_schmidt.rds')
+# adding ave dates for Lilli and Vortsjarv
+ave_seasons_end <- dplyr::filter(out, !lake %in% c('Lillinonah','Vortsjarv')) %>%
+  summarise(ave_spring_end = mean(spring_end),
+         ave_fall_start = mean(fall_start)) %>%
+  select(ave_spring_end, ave_fall_start)
+
+out <- out %>%
+  mutate(spring_end = case_when(lake %in% c('Lillinonah','Vortsjarv') ~ ave_seasons_end$ave_spring_end,
+                                TRUE ~ spring_end),
+         fall_start = case_when(lake %in% c('Lillinonah','Vortsjarv') ~ ave_seasons_end$ave_fall_start,
+                                TRUE ~ fall_start)) %>%
+  group_by(lake) %>%
+  mutate(season = case_when(
+    doy < spring_end & doy > 80 ~ 'spring',
+    doy >= spring_end & doy <= fall_start ~ 'summer',
+    doy > fall_start & doy < 350 ~ 'fall')) %>%
+  ungroup()
+
 
 windows()
 ggplot(out, aes(x = date, y = z_schmidt.stability, color = season)) +
@@ -165,133 +187,136 @@ ggplot(out, aes(x = date, y = z_schmidt.stability, color = season)) +
   facet_wrap(~lake, scales = 'free') +
   theme_classic()
 
+saveRDS(out, 'results/z_scored_schmidt.rds')
+
+
 # using z-score cutoff:
 #   - average fall start is DOY 243, with range of 229 to 275
 #   - average spring end is DOY 154, with range of 126 to 185
 
 
-# using non-z-scored cutoff; it seems like buoyancy frequency is dependent on measurement depths which is why z-score may be better choice
-out <- agg %>%
-  group_by(lake) %>%
-  mutate(doy = as.numeric(strftime(date, format = '%j', tz ='GMT')),
-         spring_end = min(doy[schmidt.stability>schmidt.stability_cutoff], na.rm=T), # earliest date that buoyancy frequency exceeds threshold
-         fall_start = min(doy[schmidt.stability<schmidt.stability_cutoff & doy > spring_end + 80], na.rm=T), # earliest date that buoyancy frequency is less than threshold and more than 2 months past start of summer
-         season = case_when(
-           doy < spring_end & doy > 80 ~ 'spring',
-           doy >= spring_end & doy <= fall_start ~ 'summer',
-           doy > fall_start & doy < 350 ~ 'fall')) %>%
-  ungroup()
-
-# using non-z-score cutoff:
-#   - average fall start is DOY 250, with range of 238 to 276
-#   - average spring end is DOY 146, with range of 118 to 185
-
-windows()
-ggplot(out, aes(x = date, y = schmidt.stability, color = season)) +
-  geom_point() +
-  geom_hline(yintercept = schmidt.stability_cutoff) +
-  facet_wrap(~lake, scales = 'free') +
-  theme_classic()
+# # using non-z-scored cutoff; it seems like buoyancy frequency is dependent on measurement depths which is why z-score may be better choice
+# out <- agg %>%
+#   group_by(lake) %>%
+#   mutate(doy = as.numeric(strftime(date, format = '%j', tz ='GMT')),
+#          spring_end = min(doy[schmidt.stability>schmidt.stability_cutoff], na.rm=T), # earliest date that buoyancy frequency exceeds threshold
+#          fall_start = min(doy[schmidt.stability<schmidt.stability_cutoff & doy > spring_end + 80], na.rm=T), # earliest date that buoyancy frequency is less than threshold and more than 2 months past start of summer
+#          season = case_when(
+#            doy < spring_end & doy > 80 ~ 'spring',
+#            doy >= spring_end & doy <= fall_start ~ 'summer',
+#            doy > fall_start & doy < 350 ~ 'fall')) %>%
+#   ungroup()
+#
+# # using non-z-score cutoff:
+# #   - average fall start is DOY 250, with range of 238 to 276
+# #   - average spring end is DOY 146, with range of 118 to 185
+#
+# windows()
+# ggplot(out, aes(x = date, y = schmidt.stability, color = season)) +
+#   geom_point() +
+#   geom_hline(yintercept = schmidt.stability_cutoff) +
+#   facet_wrap(~lake, scales = 'free') +
+#   theme_classic()
 ###################################
 # lake number cuttoff
-
-library(ggplot2)
-library(dplyr)
-
-dir<-'data/lake number/' # directory of metabolism data
-files<-list.files(dir) %>% # folders in this dir
-  tbl_df() %>%
-  dplyr::filter(!grepl('.doc|Trout', value)) # get rid of README doc; skipping trout for now --> have to do bootstrapping on this still
-
-all <- lapply(files$value, function(file){
-  cur = read.table(file.path(dir,file), header=T, sep='\t', stringsAsFactors = F) %>%
-    mutate(lake = strsplit(file, '_sch')[[1]][1],
-           date = as.Date(datetime))
-}) %>% bind_rows()
-
-agg <- all %>%
-  group_by(lake) %>%
-  mutate(z_lake.number = (lake.number - mean(lake.number, na.rm=T)) / sd(lake.number, na.rm =T)) %>%
-  ungroup() %>%
-  group_by(lake, date) %>%
-  summarise(lake.number = median(lake.number, na.rm = T),
-            z_lake.number = median(z_lake.number, na.rm = T)) %>%
-  ungroup()
-
-agg <- all %>%
-  group_by(lake, date) %>%
-  summarise(lake.number = median(lake.number, na.rm = T)) %>%
-  ungroup() %>%
-  group_by(lake) %>%
-  mutate(z_lake.number = (lake.number - mean(lake.number, na.rm=T)) / sd(lake.number, na.rm =T)) %>%
-  ungroup()
-
-
-lake.number_cutoff <- 1
-
-windows()
-ggplot(agg, aes(x = date, y = lake.number)) +
-  geom_point() +
-  geom_hline(yintercept = lake.number_cutoff) +
-  facet_wrap(~lake, scales = 'free') +
-  theme_classic()
-
-# use z score for lake.number cuttoff?
-z_lake.number_cutoff = 0
-
-windows()
-ggplot(agg, aes(x = date, y = z_lake.number)) +
-  geom_point() +
-  geom_hline(yintercept = z_lake.number_cutoff) +
-  facet_wrap(~lake, scales = 'free') +
-  theme_classic()
-
-
-out <- agg %>%
-  group_by(lake) %>%
-  mutate(doy = as.numeric(strftime(date, format = '%j', tz ='GMT')),
-         spring_end = min(doy[z_lake.number>z_lake.number_cutoff], na.rm=T), # earliest date that buoyancy frequency exceeds threshold
-         fall_start = min(doy[z_lake.number<z_lake.number_cutoff & doy > spring_end + 80], na.rm=T), # earliest date that buoyancy frequency is less than threshold and more than 2 months past start of summer
-         season = case_when(
-           doy < spring_end & doy > 80 ~ 'spring',
-           doy >= spring_end & doy <= fall_start ~ 'summer',
-           doy > fall_start & doy < 350 ~ 'fall')) %>%
-  ungroup()
-
-
-windows()
-ggplot(out, aes(x = date, y = z_lake.number, color = season)) +
-  geom_point() +
-  geom_hline(yintercept = z_lake.number_cutoff) +
-  facet_wrap(~lake, scales = 'free') +
-  theme_classic()
-
-# using z-score cutoff:
-#   - average fall start is DOY 243, with range of 229 to 275
-#   - average spring end is DOY 154, with range of 126 to 185
-
-
-# using non-z-scored cutoff; it seems like buoyancy frequency is dependent on measurement depths which is why z-score may be better choice
-out <- agg %>%
-  group_by(lake) %>%
-  mutate(doy = as.numeric(strftime(date, format = '%j', tz ='GMT')),
-         spring_end = min(doy[lake.number>lake.number_cutoff], na.rm=T), # earliest date that buoyancy frequency exceeds threshold
-         fall_start = min(doy[lake.number<lake.number_cutoff & doy > spring_end + 80], na.rm=T), # earliest date that buoyancy frequency is less than threshold and more than 2 months past start of summer
-         season = case_when(
-           doy < spring_end & doy > 80 ~ 'spring',
-           doy >= spring_end & doy <= fall_start ~ 'summer',
-           doy > fall_start & doy < 350 ~ 'fall')) %>%
-  ungroup()
-
-# using non-z-score cutoff:
-#   - average fall start is DOY 250, with range of 238 to 276
-#   - average spring end is DOY 146, with range of 118 to 185
-
-windows()
-ggplot(out, aes(x = date, y = lake.number, color = season)) +
-  geom_point() +
-  geom_hline(yintercept = lake.number_cutoff) +
-  facet_wrap(~lake, scales = 'free') +
-  theme_classic()
-
-
+#
+# library(ggplot2)
+# library(dplyr)
+#
+# dir<-'data/lake number/' # directory of metabolism data
+# files<-list.files(dir) %>% # folders in this dir
+#   tbl_df() %>%
+#   dplyr::filter(!grepl('.doc|Trout', value)) # get rid of README doc; skipping trout for now --> have to do bootstrapping on this still
+#
+# all <- lapply(files$value, function(file){
+#   cur = read.table(file.path(dir,file), header=T, sep='\t', stringsAsFactors = F) %>%
+#     mutate(lake = strsplit(file, '_sch')[[1]][1],
+#            date = as.Date(datetime))
+# }) %>% bind_rows()
+#
+# agg <- all %>%
+#   group_by(lake) %>%
+#   mutate(z_lake.number = (lake.number - mean(lake.number, na.rm=T)) / sd(lake.number, na.rm =T)) %>%
+#   ungroup() %>%
+#   group_by(lake, date) %>%
+#   summarise(lake.number = median(lake.number, na.rm = T),
+#             z_lake.number = median(z_lake.number, na.rm = T)) %>%
+#   ungroup()
+#
+# agg <- all %>%
+#   group_by(lake, date) %>%
+#   summarise(lake.number = median(lake.number, na.rm = T)) %>%
+#   ungroup() %>%
+#   group_by(lake) %>%
+#   mutate(z_lake.number = (lake.number - mean(lake.number, na.rm=T)) / sd(lake.number, na.rm =T)) %>%
+#   ungroup()
+#
+#
+# lake.number_cutoff <- 1
+#
+# windows()
+# ggplot(agg, aes(x = date, y = lake.number)) +
+#   geom_point() +
+#   geom_hline(yintercept = lake.number_cutoff) +
+#   facet_wrap(~lake, scales = 'free') +
+#   theme_classic()
+#
+# # use z score for lake.number cuttoff?
+# z_lake.number_cutoff = 0
+#
+# windows()
+# ggplot(agg, aes(x = date, y = z_lake.number)) +
+#   geom_point() +
+#   geom_hline(yintercept = z_lake.number_cutoff) +
+#   facet_wrap(~lake, scales = 'free') +
+#   theme_classic()
+#
+#
+# out <- agg %>%
+#   group_by(lake) %>%
+#   mutate(doy = as.numeric(strftime(date, format = '%j', tz ='GMT')),
+#          spring_end = min(doy[z_lake.number>z_lake.number_cutoff], na.rm=T), # earliest date that buoyancy frequency exceeds threshold
+#          fall_start = min(doy[z_lake.number<z_lake.number_cutoff & doy > spring_end + 80], na.rm=T), # earliest date that buoyancy frequency is less than threshold and more than 2 months past start of summer
+#          season = case_when(
+#            doy < spring_end & doy > 80 ~ 'spring',
+#            doy >= spring_end & doy <= fall_start ~ 'summer',
+#            doy > fall_start & doy < 350 ~ 'fall')) %>%
+#   ungroup()
+#
+#
+# windows()
+# ggplot(out, aes(x = date, y = z_lake.number, color = season)) +
+#   geom_point() +
+#   geom_hline(yintercept = z_lake.number_cutoff) +
+#   facet_wrap(~lake, scales = 'free') +
+#   theme_classic()
+#
+# # using z-score cutoff:
+# #   - average fall start is DOY 243, with range of 229 to 275
+# #   - average spring end is DOY 154, with range of 126 to 185
+#
+#
+# # using non-z-scored cutoff; it seems like buoyancy frequency is dependent on measurement depths which is why z-score may be better choice
+# out <- agg %>%
+#   group_by(lake) %>%
+#   mutate(doy = as.numeric(strftime(date, format = '%j', tz ='GMT')),
+#          spring_end = min(doy[lake.number>lake.number_cutoff], na.rm=T), # earliest date that buoyancy frequency exceeds threshold
+#          fall_start = min(doy[lake.number<lake.number_cutoff & doy > spring_end + 80], na.rm=T), # earliest date that buoyancy frequency is less than threshold and more than 2 months past start of summer
+#          season = case_when(
+#            doy < spring_end & doy > 80 ~ 'spring',
+#            doy >= spring_end & doy <= fall_start ~ 'summer',
+#            doy > fall_start & doy < 350 ~ 'fall')) %>%
+#   ungroup()
+#
+# # using non-z-score cutoff:
+# #   - average fall start is DOY 250, with range of 238 to 276
+# #   - average spring end is DOY 146, with range of 118 to 185
+#
+# windows()
+# ggplot(out, aes(x = date, y = lake.number, color = season)) +
+#   geom_point() +
+#   geom_hline(yintercept = lake.number_cutoff) +
+#   facet_wrap(~lake, scales = 'free') +
+#   theme_classic()
+#
+#
