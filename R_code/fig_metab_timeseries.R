@@ -66,7 +66,7 @@ cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
 
 # keeping x and y axis scales the same for every plot
 metab <- ggplot(metab_plot, aes(x = plot_date, y = GPP, group = lake ,color = season)) +
-  geom_line(size = 1) +
+  geom_line(size =1) +
   geom_line(data = metab_plot, aes( x= plot_date, y = R, group = lake), size = 1) +
   facet_wrap(~lake,labeller = as_labeller(lake_names), strip.position = 'top') +
   theme_classic() +
