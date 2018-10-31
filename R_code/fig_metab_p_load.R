@@ -1,6 +1,7 @@
 # plotting load timeseries for figure 2
 
 library(dplyr)
+library(cowplot)
 library(ggplot2)
 
 ### loading in metabolism data for sorting by mean GPP ###
@@ -31,9 +32,12 @@ max_doy = 300
 
 metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff) %>%
   group_by(lake) %>%
-  mutate(mean_gpp = mean(GPP, na.rm=T)) %>%
+  summarise(mean_gpp = mean(GPP, na.rm=T),
+            mean_R = mean(R, na.rm =T),
+            mean_NEP = mean(NEP, na.rm=T)) %>%
   ungroup()
 
+#### loading in nutrient load time series ###
 dir<-'results/nutrient load/' # directory of load data
 files<-list.files(dir) # folders in this dir
 files<-files[-grep('Readme',files)] # get rid of README doc
@@ -59,31 +63,24 @@ metaData <- read.csv('data/metadataLookUp.csv',stringsAsFactor=F) %>%
   select(Lake.Name, Volume..m3., Surface.Area..m2., Catchment.Area..km2., Lake.Residence.Time..year.)
 all_load <- left_join(all_load, metaData, by = c('lake' = 'Lake.Name'))
 
-all_load <- left_join(all_load, dplyr::select(metab_plot, lake, date, mean_gpp), by = c('lake'='lake','date'='date'))
-
-cv_cutoff = 10
 min_doy = 120
 max_doy = 300
 
 load_plot <- dplyr::filter(all_load, doy > min_doy, doy < max_doy) %>%
   group_by(lake) %>%
-  mutate(mean_tp = mean(TP_load / Volume..m3., na.rm=T)) %>%
-  ungroup() %>%
-  mutate(lake = factor(lake),
-         season = factor(season),
-         plot_date = as.Date(paste('2001-',doy,sep=''), format = '%Y-%j', tz ='GMT'),
-         TP_load = ifelse(TP_load == 0, NA, TP_load),
-         TP_load = TP_load / 31,
-         TN_load = TN_load / 14,
-         DOC_load = DOC_load / 12) # changing to mol for stoichiometry plot
+  summarise(mean_tp_load = mean(TP_load / Volume..m3., na.rm=T),
+            mean_tn_load = mean(TN_load / Volume..m3., na.rm =T),
+            mean_doc_load = mean(DOC_load / Volume..m3., na.rm=T),
+            mean_doc_tp_load = mean((DOC_load / 12) / (TP_load/31), na.rm=T)) %>%
+  ungroup()
+
+plot_data <- left_join(load_plot, metab_plot, by = 'lake')
 
 #ordering by mean inflow
-lakes_sorted <- load_plot$lake[sort.list(load_plot$mean_gpp)]
+lakes_sorted <- plot_data$lake[sort.list(plot_data$mean_gpp)]
 lakes_sorted <- as.character(lakes_sorted[!duplicated(lakes_sorted)])
-seasons_sorted <- c('spring','summer','fall')
 
-load_plot$lake <- factor(load_plot$lake,levels = lakes_sorted)
-load_plot$season <- factor(load_plot$season, levels = seasons_sorted)
+plot_data$lake <- factor(plot_data$lake,levels = lakes_sorted)
 
 # facet labeller
 lake_names <- c('Acton' = 'Acton Lake',
@@ -107,32 +104,59 @@ lake_names <- c('Acton' = 'Acton Lake',
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7") # colorblind-friendly pallete
 
 # keeping x and y axis scales the same for every plot
-stoich <- ggplot(load_plot, aes(x = plot_date, y = DOC_load/TP_load, group = lake)) +
-  geom_line(aes(color = 'a'), size = 1) +
-  geom_line(data = load_plot, aes(x = plot_date, y = TN_load / TP_load, group = lake, color = 'b'), size = 1)+
-  geom_line(data = load_plot, aes(x = plot_date, y = DOC_load / TN_load, group = lake, color = 'c'), size = 1)+
-  facet_wrap(~lake, labeller = as_labeller(lake_names), strip.position = 'top') +
+gpp_tp <- ggplot(plot_data, aes(x = mean_tp_load * 1000*1000, y = mean_gpp, group = lake)) +
+  geom_point(size = 8) +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
         axis.title = element_text(size = 16),
         axis.text = element_text(size = 12),
-        axis.title.x = element_blank(),
         legend.title = element_blank(),
         legend.text = element_text(size =12)) +
-  scale_color_manual(name = '',
-                     values = c('a' = 'black',
-                                'b' = '#CC79A7',
-                                'c' = '#D55E00'),
-                     labels = c('C:P', 'N:P', 'C:N')) +
-  ylab(expression(Load~Stoichiometry~(mol:mol))) +
-  scale_y_log10() #+
-  # geom_hline(yintercept = 374.6, color = 'black', linetype = 'dashed')+ # maranger et al 2018 average stoich of watershed inputs for comparison
-  # geom_hline(yintercept = 24.1, color ='#CC79A7', linetype = 'dashed')+
-  # geom_hline(yintercept = 15.5, color = '#D55E00', linetype = 'dashed')
+  xlab(expression(TP~Load~(mg~m^-3~day^-1))) +
+  ylab(expression(GPP~(mg~O[2]~L^-1~day^-1)))
 
+gpp_tn <- ggplot(plot_data, aes(x = mean_tn_load * 1000*1000, y = mean_gpp, group = lake)) +
+  geom_point(size = 8) +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  xlab(expression(TN~Load~(mg~m^-3~day^-1))) +
+  ylab(expression(GPP~(mg~O[2]~L^-1~day^-1)))
 
-stoich
+gpp_doc <- ggplot(plot_data, aes(x = mean_doc_load * 1000*1000, y = mean_gpp, group = lake)) +
+  geom_point(size = 8) +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  xlab(expression(DOC~Load~(mg~m^-3~day^-1))) +
+  ylab(expression(GPP~(mg~O[2]~L^-1~day^-1)))
 
-ggsave('figures/fig_stoich_timeseries.png', plot = stoich, width = 10, height = 10)
+gpp_doc_tp <- ggplot(plot_data, aes(x = mean_doc_tp_load, y = mean_gpp, group = lake)) +
+  geom_point(size = 8) +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  xlab(expression(Load~C:P~(mol:mol))) +
+  ylab(expression(GPP~(mg~O[2]~L^-1~day^-1))) +
+  scale_x_log10()
+
+g = plot_grid(gpp_tp, gpp_tn, gpp_doc, gpp_doc_tp,
+          labels = c('A', 'B', 'C', 'D'), align = 'hv',nrow = 2)
+
+g
+
+ggsave('figures/fig_gpp_loads.png', plot = g, width = 10, height = 10)
 
