@@ -60,7 +60,7 @@ season_cutoff <- readRDS('results/z_scored_schmidt.rds') %>%
 all_load <- left_join(all_load, season_cutoff, by = c('lake' = 'lake', 'date' = 'date'))
 
 metaData <- read.csv('data/metadataLookUp.csv',stringsAsFactor=F) %>%
-  select(Lake.Name, Volume..m3., Surface.Area..m2., Catchment.Area..km2., Lake.Residence.Time..year.)
+  select(Lake.Name, Volume..m3., Surface.Area..m2., Catchment.Area..km2., Lake.Residence.Time..year., kD)
 all_load <- left_join(all_load, metaData, by = c('lake' = 'Lake.Name'))
 
 min_doy = 120
@@ -71,7 +71,8 @@ load_plot <- dplyr::filter(all_load, doy > min_doy, doy < max_doy) %>%
   summarise(mean_tp_load = mean(TP_load / Volume..m3., na.rm=T),
             mean_tn_load = mean(TN_load / Volume..m3., na.rm =T),
             mean_doc_load = mean(DOC_load / Volume..m3., na.rm=T),
-            mean_doc_tp_load = mean((DOC_load / 12) / (TP_load/31), na.rm=T)) %>%
+            mean_doc_tp_load = mean((DOC_load / 12) / (TP_load/31), na.rm=T),
+            kD = mean(kD)) %>%
   ungroup()
 
 plot_data <- left_join(load_plot, metab_plot, by = 'lake')
