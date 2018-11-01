@@ -33,8 +33,8 @@ max_doy = 300
 metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff) %>%
   group_by(lake) %>%
   summarise(mean_gpp = mean(GPP, na.rm=T),
-            mean_R = mean(R, na.rm =T),
-            mean_NEP = mean(NEP, na.rm=T)) %>%
+            mean_r = mean(R, na.rm =T),
+            mean_nep = mean(NEP, na.rm=T)) %>%
   ungroup()
 
 #### loading in nutrient load time series ###
@@ -103,7 +103,6 @@ lake_names <- c('Acton' = 'Acton Lake',
 
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7") # colorblind-friendly pallete
 
-# keeping x and y axis scales the same for every plot
 gpp_tp <- ggplot(plot_data, aes(x = mean_tp_load * 1000*1000, y = mean_gpp, group = lake)) +
   geom_point(size = 8) +
   theme_classic() +
@@ -160,3 +159,110 @@ g
 
 ggsave('figures/fig_gpp_loads.png', plot = g, width = 10, height = 10)
 
+
+r_tp <- ggplot(plot_data, aes(x = mean_tp_load * 1000*1000, y = mean_r, group = lake)) +
+  geom_point(size = 8) +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  xlab(expression(TP~Load~(mg~m^-3~day^-1))) +
+  ylab(expression(r~(mg~O[2]~L^-1~day^-1)))
+
+r_tn <- ggplot(plot_data, aes(x = mean_tn_load * 1000*1000, y = mean_r, group = lake)) +
+  geom_point(size = 8) +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  xlab(expression(TN~Load~(mg~m^-3~day^-1))) +
+  ylab(expression(r~(mg~O[2]~L^-1~day^-1)))
+
+r_doc <- ggplot(plot_data, aes(x = mean_doc_load * 1000*1000, y = mean_r, group = lake)) +
+  geom_point(size = 8) +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  xlab(expression(DOC~Load~(mg~m^-3~day^-1))) +
+  ylab(expression(r~(mg~O[2]~L^-1~day^-1)))
+
+r_doc_tp <- ggplot(plot_data, aes(x = mean_doc_tp_load, y = mean_r, group = lake)) +
+  geom_point(size = 8) +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  xlab(expression(Load~C:P~(mol:mol))) +
+  ylab(expression(r~(mg~O[2]~L^-1~day^-1))) +
+  scale_x_log10()
+
+g = plot_grid(r_tp, r_tn, r_doc, r_doc_tp,
+              labels = c('A', 'B', 'C', 'D'), align = 'hv',nrow = 2)
+
+
+
+nep_tp <- ggplot(plot_data, aes(x = mean_tp_load * 1000*1000, y = mean_nep, group = lake)) +
+  geom_point(size = 8) +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  xlab(expression(TP~Load~(mg~m^-3~day^-1))) +
+  ylab(expression(r~(mg~O[2]~L^-1~day^-1)))
+
+nep_tn <- ggplot(plot_data, aes(x = mean_tn_load * 1000*1000, y = mean_nep, group = lake)) +
+  geom_point(size = 8) +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  xlab(expression(TN~Load~(mg~m^-3~day^-1))) +
+  ylab(expression(r~(mg~O[2]~L^-1~day^-1)))
+
+nep_doc <- ggplot(plot_data, aes(x = mean_doc_load * 1000*1000, y = mean_nep, group = lake)) +
+  geom_point(size = 8) +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  xlab(expression(DOC~Load~(mg~m^-3~day^-1))) +
+  ylab(expression(r~(mg~O[2]~L^-1~day^-1)))
+
+nep_doc_tp <- ggplot(plot_data, aes(x = mean_doc_tp_load, y = mean_nep, group = lake)) +
+  geom_point(size = 8) +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  xlab(expression(Load~C:P~(mol:mol))) +
+  ylab(expression(r~(mg~O[2]~L^-1~day^-1))) +
+  scale_x_log10()
+
+g = plot_grid(nep_tp, nep_tn, nep_doc, nep_doc_tp,
+              labels = c('A', 'B', 'C', 'D'), align = 'hv',nrow = 2)
+g
