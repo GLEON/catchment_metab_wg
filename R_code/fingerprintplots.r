@@ -91,7 +91,37 @@ all_metabst<-merge(all_metab, ave_st, by=c('lake', 'doy'))
 cv_thres = 4  #cutoff for keeping metabolism data
 windows()
 par(mfrow=c(4,4)) # how many panels on graph (alternatively we could call a new window in every iteration of for loop)
-col = c('orange','green','blue') # fall , spring, summer colors ; arranges them alphabetically
+
+library(dplyr)
+all_metab = all_metab %>%
+  mutate(color = case_when(season == 'spring' ~ 'green',
+                           season == 'summer' ~ 'blue',
+                           season == 'fall' ~ 'orange')) # creates a new column in the all_metab data frame for season color
+
+for(i in 1:length(unique(all_metab$lake))){ # looping through each lake
+  cur<-all_metab[all_metab$lake==unique(all_metab$lake)[i],]
+  cur <- cur[!is.na(cur$season),] # only keeping dates that fall within our pre-defined seasons
+  cur <- cur[cur$GPP_SD/cur$GPP<cv_thres&cur$R_SD/cur$R<cv_thres,]#keeping only days that meet CV threshold
+  ylim=c(min(cur$R,na.rm = T),max(cur$R,na.rm = T))
+  xlim=c(min(cur$GPP,na.rm = T),max(cur$GPP,na.rm = T))
+
+  plot(cur$R~cur$GPP,pch=16,ylim=ylim,xlim=xlim,ylab='R',xlab='GPP',main=unique(all_metab$lake)[i],col=cur$color)
+  abline(0,-1,lty=2,lwd=2)
+}
+
+# plotting GPP vs. R by season
+cv_thres = 4  #cutoff for keeping metabolism data
+windows()
+
+ggplot(dplyr::filter(all_metab, GPP_SD/GPP < cv_thres, R_SD/R < cv_thres, !is.na(season)), aes(x = GPP, y = R, color = season)) +
+  geom_point() +
+  facet_wrap(~lake, scales = 'free') +
+  theme_classic() +
+  geom_abline(slope = -1, intercept = 0, linetype = 'dashed') +
+  scale_color_manual(values = c('fall' = 'orange',
+                                'spring' = 'green',
+                                'summer' = 'blue'))
+
 for(i in 1:length(unique(all_metab$lake))){ # looping through each lake
   cur<-all_metab[all_metab$lake==unique(all_metab$lake)[i],]
   cur <- cur[!is.na(cur$season),] # only keeping dates that fall within our pre-defined seasons
