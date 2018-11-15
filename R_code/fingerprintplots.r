@@ -9,6 +9,7 @@
 
 
 library(xlsx)
+library(dplyr)
 
 dir<-'results/metab/20161107/' # directory of metabolism data
 folders<-list.files(dir) # folders in this dir
@@ -26,14 +27,17 @@ for(i in 1:length(folders)){ # loops over all folders in metab directory
 
 all_metab$date<-as.Date(paste(all_metab$year,all_metab$doy),format='%Y %j') # making date
 
+season_cutoff <- readRDS('results/z_scored_schmidt.rds') %>% select(-doy)# seasonal cutoff based on z-scored schmidt stability
+all_metab <- left_join(all_metab, season_cutoff, by = c('lake' = 'lake', 'date' = 'date'))
+
 # creating season column. season cutoffs used by Jim ; can change if needed
 # Spring = (doy < 180)
 # Summer = (doy >= 180 & doy <=240)
 # Fall = (doy > 240)
-all_metab$season <- rep(NA,nrow(all_metab))
-all_metab$season <- ifelse(all_metab$doy>120&all_metab$doy<180,'spring',all_metab$season) # if doy with criteria, spring, else leave alone
-all_metab$season <- ifelse(all_metab$doy>=180&all_metab$doy<=240,'summer',all_metab$season)
-all_metab$season <- ifelse(all_metab$doy>240&all_metab$doy<305,'fall',all_metab$season)
+#all_metab$season <- rep(NA,nrow(all_metab))
+#all_metab$season <- ifelse(all_metab$doy>120&all_metab$doy<180,'spring',all_metab$season) # if doy with criteria, spring, else leave alone
+#all_metab$season <- ifelse(all_metab$doy>=180&all_metab$doy<=240,'summer',all_metab$season)
+#all_metab$season <- ifelse(all_metab$doy>240&all_metab$doy<305,'fall',all_metab$season)
 
 #loop below creates one dataframe with all loading data in it - JK modifying the loop JZ created above for metabolism
 dir<-'results/nutrient load/' # directory of loading data
@@ -88,10 +92,14 @@ names(ave_st)[2]<-"lake"
 all_metabst<-merge(all_metab, ave_st, by=c('lake', 'doy'))
 
 # plotting GPP vs. R by season
-cv_thres = 4  #cutoff for keeping metabolism data
+cv_thres = 10  #cutoff for keeping metabolism data
 windows()
 par(mfrow=c(4,4)) # how many panels on graph (alternatively we could call a new window in every iteration of for loop)
-col = c('orange','green','blue') # fall , spring, summer colors ; arranges them alphabetically
+par(mar=c(3,2,2,2), oma=c(3,3,1,1))
+all_metab = all_metab %>%
+  mutate(color = case_when(season == 'spring' ~ 'green',
+                           season == 'summer' ~ 'blue',
+                           season == 'fall' ~ 'orange')) # creates a new column in the all_metab data frame for season color
 for(i in 1:length(unique(all_metab$lake))){ # looping through each lake
   cur<-all_metab[all_metab$lake==unique(all_metab$lake)[i],]
   cur <- cur[!is.na(cur$season),] # only keeping dates that fall within our pre-defined seasons
@@ -99,13 +107,14 @@ for(i in 1:length(unique(all_metab$lake))){ # looping through each lake
   ylim=c(min(cur$R,na.rm = T),max(cur$R,na.rm = T))
   xlim=c(min(cur$GPP,na.rm = T),max(cur$GPP,na.rm = T))
 
-  plot(cur$R~cur$GPP,pch=16,ylim=ylim,xlim=xlim,ylab='R',xlab='GPP',main=unique(all_metab$lake)[i],col=col[as.factor(cur$season)])
+  plot(cur$R~cur$GPP,pch=16,ylim=ylim,xlim=xlim,ylab='',xlab='',main=unique(all_metab$lake)[i],col=cur$color)
   abline(0,-1,lty=2,lwd=2)
 }
-
+mtext(expression(R~(mg~O[2]~L^-1~day^-1)), side=1, outer=TRUE)
+mtext(expression(GPP~(mg~O[2]~L^-1~day^-1)), side=2, outer=TRUE)
 
 # plotting GPP vs. R colored by doy in grey scale
-cv_thres = 4  #cutoff for keeping metabolism data
+cv_thres = 10  #cutoff for keeping metabolism data
 windows()
 par(mfrow=c(4,4)) # how many panels on graph (alternatively we could call a new window in every iteration of for loop)
 for(i in 1:length(unique(all_metab$lake))){ # looping through each lake
