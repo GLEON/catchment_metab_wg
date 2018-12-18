@@ -106,14 +106,14 @@ for(i in 1:length(unique(all_metab$lake))){ # looping through each lake
   cur<-all_metab[all_metab$lake==unique(all_metab$lake)[i],]
   cur <- cur[!is.na(cur$season),] # only keeping dates that fall within our pre-defined seasons
   cur <- cur[cur$GPP_SD/cur$GPP<cv_thres&cur$R_SD/cur$R<cv_thres,]#keeping only days that meet CV threshold
-  ylim=c(min(cur$R,na.rm = T),max(cur$R,na.rm = T))
-  xlim=c(min(cur$GPP,na.rm = T),max(cur$GPP,na.rm = T))
+  xlim=c(0,max(abs(c(cur$R,cur$GPP)),na.rm = T))
+  ylim=c(-1*xlim[2],xlim[1])
 
   plot(cur$R~cur$GPP,pch=16,ylim=ylim,xlim=xlim,ylab='',xlab='',main=unique(all_metab$lake)[i],col=cur$color)
   abline(0,-1,lty=2,lwd=2)
 }
-mtext(expression(R~(mg~O[2]~L^-1~day^-1)), side=1, outer=TRUE)
-mtext(expression(GPP~(mg~O[2]~L^-1~day^-1)), side=2, outer=TRUE)
+mtext(expression(R~(mg~O[2]~L^-1~day^-1)), side=2, outer=TRUE)
+mtext(expression(GPP~(mg~O[2]~L^-1~day^-1)), side=1, outer=TRUE)
 
 # plotting GPP vs. R colored by doy in grey scale
 cv_thres = 10  #cutoff for keeping metabolism data

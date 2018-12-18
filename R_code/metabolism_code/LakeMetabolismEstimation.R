@@ -1,8 +1,9 @@
 # lake metabolism estimates for GLEON Catchment and metabolism group
 # 2015-05-19;
 # for(i in 12:17){
+library(dplyr)
 
-i=8
+i=10
 toRm=ls()
 toRm=toRm[-which(toRm=='i')]
 rm(list=toRm)
@@ -45,6 +46,15 @@ if(0%in%get.offsets(wtr)){
   colnames(wtr)[which(0==get.offsets(wtr))+1]<-'wtr_0.1'
 }
 
+doobs <- doobs %>%
+  arrange(datetime)
+wtr <- wtr %>%
+  arrange(datetime)
+wnd <- wnd %>%
+  arrange(datetime)
+par <- par %>%
+  arrange(datetime)
+
 # making time step all the same
 #Make all data sets extend from startTime to endTime by timeStep
 #Note that for some lakes it may be necessary to aggregate some variables to coarser time scale to get match up
@@ -56,7 +66,7 @@ if(lake=='Trout'|lake=='Feeagh'){
   }
 }
 if(lake=='Mendota'){
-  timeStep=60 # Mendota par and wtr are 60 mins; linearly interpolating below
+  timeStep=10 # Mendota par and wtr are 60 mins; linearly interpolating below
 }
 
 doobs$datetime <- floorMins(doobs)
@@ -134,10 +144,10 @@ ts.data$sunrise<-sun$sunrise
 # metab.out<-metab(ts.data,method = 'mle',wtr.name = colnames(ts.data[grep('wtr',colnames(ts.data))]),irr.name = 'par',do.obs.name = 'doobs')
 error.type='PE' # observation error or process error specification for MLE (OE fits initial DO)
 logged=T # whether or not to log /exponentiate parameter estimates for constraining positive /negative
-bootstrap=T # whether or not to bootstrap the fits to produce distribution of fitted parameters (uncertainty in parameter estimate)
+bootstrap=F # whether or not to bootstrap the fits to produce distribution of fitted parameters (uncertainty in parameter estimate)
 n.boot=1000 # how many iterations in bootstrapping if bootstrap = T
 ar1.resids=T # maintain autocorrelation in residuals when bootstrapping if True
-guesses=c(1E-3,1E-3) # MLE guesses for gppCoeff and rCoeff
+guesses=c(1E-2,1E-2) # MLE guesses for gppCoeff and rCoeff
 # guesses=c(1E-1,1E-4,1E-4) # MLE guess for gppMaxCoeff, gppCoeff, and rCoeff for light saturating function
 nDaysSim=1 #number of days over which to estimate metab coefficients
 optim_method='Nelder-Mead'

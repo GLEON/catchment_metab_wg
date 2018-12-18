@@ -126,7 +126,10 @@ stoich <- ggplot(load_plot, aes(x = plot_date, y = DOC_load/TP_load, group = lak
                                 'c' = '#D55E00'),
                      labels = c('C:P', 'N:P', 'C:N')) +
   ylab(expression(Load~Stoichiometry~(mol:mol))) +
-  scale_y_log10() #+
+  scale_y_log10() +
+  geom_hline(yintercept = 106, color = 'black', linetype = 'dashed')+ # redfield ratios
+  geom_hline(yintercept = 16, color ='#CC79A7', linetype = 'dashed')+
+  geom_hline(yintercept = 6.6, color = '#D55E00', linetype = 'dashed')
   # geom_hline(yintercept = 374.6, color = 'black', linetype = 'dashed')+ # maranger et al 2018 average stoich of watershed inputs for comparison
   # geom_hline(yintercept = 24.1, color ='#CC79A7', linetype = 'dashed')+
   # geom_hline(yintercept = 15.5, color = '#D55E00', linetype = 'dashed')
