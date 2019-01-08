@@ -324,7 +324,17 @@ abline(0,0,lwd=2,lty=2,col='grey')
 
 dev.off()
 
-write.table(metab.out,
+#using bookkeeping for Mendota because we cannot fit any other metabolism model to the data
+metab.out.book <- metab.out.book %>%
+  mutate(GPP_SD = 0,
+         R_SD	= 0,
+         gppCoeff_SD = 0,
+         rCoeff_SD = 0,
+         doInit_SD = 0,
+         nll.nll = NA,
+         converge.converge = NA)
+
+write.table(metab.out.book,
             file.path('results/metab/20161107/',lake,paste(lake,'metabEst.txt',sep='_')),
             row.names=F,sep='\t',quote=F)
 

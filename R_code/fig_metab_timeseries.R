@@ -1,6 +1,7 @@
 # plotting metabolism timeseries for figure 1
 
 library(dplyr)
+library(tidyr)
 library(ggplot2)
 
 dir<-'results/metab/20161107/' # directory of metabolism data
@@ -28,13 +29,13 @@ cv_cutoff = 10
 min_doy = 120
 max_doy = 300
 
-metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff) %>%
-  group_by(lake) %>%
-  mutate(mean_gpp = mean(GPP, na.rm=T)) %>%
-  ungroup() %>%
-  mutate(lake = factor(lake),
-         season = factor(season),
-         plot_date = as.Date(paste('2001-',doy,sep=''), format = '%Y-%j', tz ='GMT'))
+metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff, R_SD/abs(R) < cv_cutoff, GPP > 0, R < 0) %>%
+  dplyr::group_by(lake) %>%
+  dplyr::mutate(mean_gpp = mean(GPP, na.rm=T)) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(lake = factor(lake),
+                season = factor(season),
+                plot_date = as.Date(paste('2001-',doy,sep=''), format = '%Y-%j', tz ='GMT'))
 
 #ordering by mean GPP
 lakes_sorted <- metab_plot$lake[sort.list(metab_plot$mean_gpp)]
