@@ -107,7 +107,7 @@ library(dplyr)
 dir<-'data/schmidt stability/' # directory of metabolism data
 files<-list.files(dir) %>% # folders in this dir
   tbl_df() %>%
-  dplyr::filter(!grepl('.doc|Trout', value)) # get rid of README doc; skipping trout for now --> have to do bootstrapping on this still
+  dplyr::filter(!grepl('.doc', value)) # get rid of README doc;
 
 all <- lapply(files$value, function(file){
   cur = read.table(file.path(dir,file), header=T, sep='\t', stringsAsFactors = F) %>%
@@ -118,10 +118,10 @@ all <- lapply(files$value, function(file){
 agg <- all %>%
   dplyr::filter(lubridate::month(date) > 3, lubridate::month(date) < 11) %>% # keeping only April - Oct months
   group_by(lake) %>%
-  mutate(z_schmidt.stability = (schmidt.stability - mean(schmidt.stability, na.rm=T)) / sd(schmidt.stability, na.rm =T)) %>%
+  dplyr::mutate(z_schmidt.stability = (schmidt.stability - mean(schmidt.stability, na.rm=T)) / sd(schmidt.stability, na.rm =T)) %>%
   ungroup() %>%
   group_by(lake, date) %>%
-  summarise(schmidt.stability = mean(schmidt.stability, na.rm = T),
+  dplyr::summarise(schmidt.stability = mean(schmidt.stability, na.rm = T),
             z_schmidt.stability = mean(z_schmidt.stability, na.rm = T)) %>%
   ungroup()
 
@@ -152,7 +152,7 @@ ggplot(agg, aes(x = date, y = z_schmidt.stability)) +
 
 out <- agg %>%
   group_by(lake) %>%
-  mutate(doy = as.numeric(strftime(date, format = '%j', tz ='GMT')),
+  dplyr::mutate(doy = as.numeric(strftime(date, format = '%j', tz ='GMT')),
          spring_end = min(doy[z_schmidt.stability>z_schmidt.stability_cutoff], na.rm=T), # earliest date that schmidt stability  exceeds threshold
          fall_start = min(doy[z_schmidt.stability<z_schmidt.stability_cutoff & doy > spring_end + 80], na.rm=T), # earliest date that schmidt stability  is less than threshold and more than 2 months past start of summer
          season = case_when(
@@ -163,17 +163,17 @@ out <- agg %>%
 
 # adding ave dates for Lilli and Vortsjarv
 ave_seasons_end <- dplyr::filter(out, !lake %in% c('Lillinonah','Vortsjarv')) %>%
-  summarise(ave_spring_end = mean(spring_end),
+  dplyr::summarise(ave_spring_end = mean(spring_end),
          ave_fall_start = mean(fall_start)) %>%
-  select(ave_spring_end, ave_fall_start)
+  dplyr::select(ave_spring_end, ave_fall_start)
 
 out <- out %>%
-  mutate(spring_end = case_when(lake %in% c('Lillinonah','Vortsjarv') ~ ave_seasons_end$ave_spring_end,
+  dplyr::mutate(spring_end = case_when(lake %in% c('Lillinonah','Vortsjarv') ~ ave_seasons_end$ave_spring_end,
                                 TRUE ~ spring_end),
          fall_start = case_when(lake %in% c('Lillinonah','Vortsjarv') ~ ave_seasons_end$ave_fall_start,
                                 TRUE ~ fall_start)) %>%
   group_by(lake) %>%
-  mutate(season = case_when(
+  dplyr::mutate(season = case_when(
     doy < spring_end & doy > 80 ~ 'spring',
     doy >= spring_end & doy <= fall_start ~ 'summer',
     doy > fall_start & doy < 350 ~ 'fall')) %>%

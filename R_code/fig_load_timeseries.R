@@ -7,7 +7,6 @@ library(ggplot2)
 dir<-'results/metab/20161107/' # directory of metabolism data
 folders<-list.files(dir) # folders in this dir
 folders<-folders[-grep('.doc',folders)] # get rid of README doc
-folders<-folders[-grep('Trout',folders)] # skipping trout for now; have to do bootstrapping on this still
 
 all_metab<-data.frame() # data frame to store all metab data
 for(i in 1:length(folders)){ # loops over all folders in metab directory
@@ -38,7 +37,6 @@ metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP 
 dir<-'results/nutrient load/' # directory of load data
 files<-list.files(dir) # folders in this dir
 files<-files[-grep('Readme',files)] # get rid of README doc
-files<-files[-grep('Trout', files)]
 
 all_load<-data.frame() # data frame to store all load data
 for(i in 1:length(files)){ # loops over all files in load directory
