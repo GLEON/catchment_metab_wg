@@ -7,7 +7,7 @@ library(ggplot2)
 dir<-'results/metab/20161107/' # directory of metabolism data
 folders<-list.files(dir) # folders in this dir
 folders<-folders[-grep('.doc',folders)] # get rid of README doc
-folders<-folders[-grep('Trout',folders)] # skipping trout for now; have to do bootstrapping on this still
+# folders<-folders[-grep('Trout',folders)] # skipping trout for now; have to do bootstrapping on this still
 
 all_metab<-data.frame() # data frame to store all metab data
 for(i in 1:length(folders)){ # loops over all folders in metab directory
@@ -60,6 +60,7 @@ lake_names <- c('Acton' = 'Acton Lake',
                 'Nastjarn' = 'Nästjärn',
                 'Ovre' = 'Övre Björntjärn',
                 'Struptjarn' = 'Struptjärn',
+                'Trout' = 'Trout Lake',
                 'Vortsjarv' = 'Lake Võrtsjärv'
                 )
 

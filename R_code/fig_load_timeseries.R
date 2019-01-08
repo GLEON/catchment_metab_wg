@@ -29,9 +29,9 @@ cv_cutoff = 10
 min_doy = 120
 max_doy = 300
 
-metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff) %>%
+metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff, R_SD/abs(R) < cv_cutoff, GPP > 0, R < 0) %>%
   group_by(lake) %>%
-  mutate(mean_gpp = mean(GPP, na.rm=T)) %>%
+  dplyr::mutate(mean_gpp = mean(GPP, na.rm=T)) %>%
   ungroup()
 
 #### loading in nutrient load time series ###
@@ -68,9 +68,9 @@ max_doy = 300
 
 load_plot <- dplyr::filter(all_load, doy > min_doy, doy < max_doy) %>%
   group_by(lake) %>%
-  mutate(mean_tp = mean(TP_load / Volume..m3., na.rm=T)) %>%
+  dplyr::mutate(mean_tp = mean(TP_load / Volume..m3., na.rm=T)) %>%
   ungroup() %>%
-  mutate(lake = factor(lake),
+  dplyr::mutate(lake = factor(lake),
          season = factor(season),
          plot_date = as.Date(paste('2001-',doy,sep=''), format = '%Y-%j', tz ='GMT'),
          TP_load = ifelse(TP_load == 0, NA, TP_load))
