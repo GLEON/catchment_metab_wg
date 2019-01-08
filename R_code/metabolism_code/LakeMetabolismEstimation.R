@@ -1,8 +1,9 @@
 # lake metabolism estimates for GLEON Catchment and metabolism group
 # 2015-05-19;
 # for(i in 12:17){
+library(dplyr)
 
-i=8
+i=10
 toRm=ls()
 toRm=toRm[-which(toRm=='i')]
 rm(list=toRm)
@@ -45,6 +46,15 @@ if(0%in%get.offsets(wtr)){
   colnames(wtr)[which(0==get.offsets(wtr))+1]<-'wtr_0.1'
 }
 
+doobs <- doobs %>%
+  arrange(datetime)
+wtr <- wtr %>%
+  arrange(datetime)
+wnd <- wnd %>%
+  arrange(datetime)
+par <- par %>%
+  arrange(datetime)
+
 # making time step all the same
 #Make all data sets extend from startTime to endTime by timeStep
 #Note that for some lakes it may be necessary to aggregate some variables to coarser time scale to get match up
@@ -56,7 +66,7 @@ if(lake=='Trout'|lake=='Feeagh'){
   }
 }
 if(lake=='Mendota'){
-  timeStep=60 # Mendota par and wtr are 60 mins; linearly interpolating below
+  timeStep=10 # Mendota par and wtr are 60 mins; linearly interpolating below
 }
 
 doobs$datetime <- floorMins(doobs)
@@ -131,37 +141,50 @@ sun$sunset<-as.POSIXct(sun$sunset,origin='1970-01-01')
 ts.data$sunrise<-sun$sunrise
 
 # metabolism function requires do.obs, do.sat, irr, k.gas, z.mix, wtr (wtr at depth of DO probe )
-# metab.out<-metab(ts.data,method = 'mle',wtr.name = colnames(ts.data[grep('wtr',colnames(ts.data))]),irr.name = 'par',do.obs.name = 'doobs')
-error.type='PE' # observation error or process error specification for MLE (OE fits initial DO)
+error.type='OE' # observation error or process error specification for MLE (OE fits initial DO)
 logged=T # whether or not to log /exponentiate parameter estimates for constraining positive /negative
-bootstrap=T # whether or not to bootstrap the fits to produce distribution of fitted parameters (uncertainty in parameter estimate)
+bootstrap=F # whether or not to bootstrap the fits to produce distribution of fitted parameters (uncertainty in parameter estimate)
 n.boot=1000 # how many iterations in bootstrapping if bootstrap = T
 ar1.resids=T # maintain autocorrelation in residuals when bootstrapping if True
-guesses=c(1E-3,1E-3) # MLE guesses for gppCoeff and rCoeff
-# guesses=c(1E-1,1E-4,1E-4) # MLE guess for gppMaxCoeff, gppCoeff, and rCoeff for light saturating function
+guesses=c(1E-2,1E-2) # MLE guesses for gppCoeff and rCoeff
+# guesses=c(1,1E-2,1E-2) # MLE guess for gppMaxCoeff, gppCoeff, and rCoeff for light saturating function
 nDaysSim=1 #number of days over which to estimate metab coefficients
 optim_method='Nelder-Mead'
 sunrise=T # if True, fit model from sunrise to sunrise
-# source('/Users/Jake/Dropbox/GLEON Catchment & Lake Metabolism/R Code/metab.support.R')
-# source('/Users/Jake/Dropbox/GLEON Catchment & Lake Metabolism/R Code/metab.support.lightSaturating.R') # light saturating GPP functions
-# dyn.load('/Users/Jake/Desktop/mleLoopLightSat.dll') # loading in compiled C code for looping
+# source('/Users/jzwart/Documents/Jake/MyPapers/GLEON Catchment & Lake Metabolism/R Code/metab.support.R')
+# source('/Users/jzwart/Documents/Jake/MyPapers/GLEON Catchment & Lake Metabolism/R Code/metab.support.lightSaturating.R') # light saturating GPP functions
+# dyn.load('/Users/jzwart/Documents/Jake/MyPapers/GLEON Catchment & Lake Metabolism/C Code/mleLoopLightSat.dll') # loading in compiled C code for looping
 
 metab.out<-my.metab(data=ts.data,method = 'mle',wtr.name = colnames(ts.data[grep('wtr',colnames(ts.data))]),
                             irr.name = 'par',do.obs.name = 'doobs',error.type=error.type,logged=logged,
                     bootstrap=bootstrap,n.boot=n.boot,ar1.resids=ar1.resids,
                     guesses=guesses,nDaysSim=nDaysSim,optim_method=optim_method,sunrise=sunrise)
-# metab.out<-metab(data=ts.data,method = 'bookkeep',wtr.name = colnames(ts.data[grep('wtr',colnames(ts.data))]),
-#                     irr.name = 'par',do.obs.name = 'doobs',lake.lat=lat)
+metab.out.book<-metab(data=ts.data,method = 'bookkeep',wtr.name = colnames(ts.data[grep('wtr',colnames(ts.data))]),
+                    irr.name = 'par',do.obs.name = 'doobs',lake.lat=lat)
+# metab.out.kalman<-metab(data=ts.data,method = 'kalman',wtr.name = colnames(ts.data[grep('wtr',colnames(ts.data))]),
+#                       irr.name = 'par',do.obs.name = 'doobs',lake.lat=lat)
+# metab.out.ols<-metab(data=ts.data,method = 'ols',wtr.name = colnames(ts.data[grep('wtr',colnames(ts.data))]),
+#                       irr.name = 'par',do.obs.name = 'doobs',lake.lat=lat)
+# metab.out.bayes<-metab(data=ts.data,method = 'bayes',wtr.name = colnames(ts.data[grep('wtr',colnames(ts.data))]),
+#                       irr.name = 'par',do.obs.name = 'doobs',lake.lat=lat)
 
 windows()
-plot(metab.out$GPP)
+plot(metab.out$GPP, type = 'o')
 windows()
-plot(metab.out$R)
+plot(metab.out$R, type = 'o')
+windows()
+plot(metab.out$NEP)
 
 plot(ma.weighted(metab.out$GPP,metab.out$GPP_SD/metab.out$GPP,7),type='l')
 plot(ma.weighted(metab.out$R,metab.out$R_SD/metab.out$R,7),type='l')
 plot(ma.weighted(metab.out$GPP,metab.out$GPP_SD/metab.out$GPP,7)+ma.weighted(metab.out$R,metab.out$R_SD/metab.out$R,7)~metab.out$doy,type='l')
 
+compare = dplyr::left_join(metab.out.book, metab.out, by = c('doy' = 'doy'), suffix = c('book', 'mle'))
+windows()
+plot(compare$GPPbook~compare$GPPmle)
+abline(0,1)
+plot(compare$GPPmle,compare$Rmle)
+abline(0,-1)
 
 # predicted DO based on parameter estimates
 pars<-attr(metab.out,'par') # parameters fit using MLE
