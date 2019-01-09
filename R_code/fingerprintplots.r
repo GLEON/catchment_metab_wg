@@ -14,7 +14,6 @@ library(dplyr)
 dir<-'results/metab/20161107/' # directory of metabolism data
 folders<-list.files(dir) # folders in this dir
 folders<-folders[-grep('.doc',folders)] # get rid of README doc
-folders<-folders[-grep('Trout',folders)] # skipping trout for now; have to do bootstrapping on this still
 
 all_metab<-data.frame() # data frame to store all metab data
 for(i in 1:length(folders)){ # loops over all folders in metab directory
@@ -43,7 +42,6 @@ all_metab <- left_join(all_metab, season_cutoff, by = c('lake' = 'lake', 'date' 
 dir<-'results/nutrient load/' # directory of loading data
 folders<-list.files(dir) # folders in this dir (in this case there are only files no folders)
 folders<-folders[-grep('Readme',folders)] # get rid of README doc
-folders<-folders[-grep('Trout',folders)] # skipping trout for now; have to do bootstrapping on this still
 
 all_load<-data.frame() # data frame to store all loading data + discharge
 for(i in 1:length(folders)){ # loops over all folders in loads directory, needed to change syntax on file path because there are no lake folders in main load folder
@@ -92,20 +90,20 @@ names(ave_st)[2]<-"lake"
 all_metabst<-merge(all_metab, ave_st, by=c('lake', 'doy'))
 
 # plotting GPP vs. R by season
-cv_thres = 10  #cutoff for keeping metabolism data
+cv_thres = 4  #cutoff for keeping metabolism data
 windows()
 par(mfrow=c(4,4)) # how many panels on graph (alternatively we could call a new window in every iteration of for loop)
 
 par(mar=c(3,2,2,2), oma=c(3,3,1,1))
 all_metab = all_metab %>%
-  mutate(color = case_when(season == 'spring' ~ 'green',
+  dplyr::mutate(color = case_when(season == 'spring' ~ 'green',
                            season == 'summer' ~ 'blue',
                            season == 'fall' ~ 'orange')) # creates a new column in the all_metab data frame for season color
 
 for(i in 1:length(unique(all_metab$lake))){ # looping through each lake
   cur<-all_metab[all_metab$lake==unique(all_metab$lake)[i],]
   cur <- cur[!is.na(cur$season),] # only keeping dates that fall within our pre-defined seasons
-  cur <- cur[cur$GPP_SD/cur$GPP<cv_thres&cur$R_SD/cur$R<cv_thres,]#keeping only days that meet CV threshold
+  cur <- cur[cur$GPP_SD/cur$GPP<cv_thres&cur$R_SD/abs(cur$R)<cv_thres,]#keeping only days that meet CV threshold
   xlim=c(0,max(abs(c(cur$R,cur$GPP)),na.rm = T))
   ylim=c(-1*xlim[2],xlim[1])
 
@@ -116,13 +114,13 @@ mtext(expression(R~(mg~O[2]~L^-1~day^-1)), side=2, outer=TRUE)
 mtext(expression(GPP~(mg~O[2]~L^-1~day^-1)), side=1, outer=TRUE)
 
 # plotting GPP vs. R colored by doy in grey scale
-cv_thres = 10  #cutoff for keeping metabolism data
+cv_thres = 4  #cutoff for keeping metabolism data
 windows()
 par(mfrow=c(4,4)) # how many panels on graph (alternatively we could call a new window in every iteration of for loop)
 for(i in 1:length(unique(all_metab$lake))){ # looping through each lake
   cur<-all_metab[all_metab$lake==unique(all_metab$lake)[i],]
   cur <- cur[!is.na(cur$season),] # only keeping dates that fall within our pre-defined seasons
-  cur <- cur[cur$GPP_SD/cur$GPP<cv_thres&cur$R_SD/cur$R<cv_thres,]#keeping only days that meet CV threshold
+  cur <- cur[cur$GPP_SD/cur$GPP<cv_thres&cur$R_SD/abs(cur$R)<cv_thres,]#keeping only days that meet CV threshold
   col <- rev(grey.colors(n = nrow(cur))) # colors based on DOY
   ylim=c(min(cur$R,na.rm = T),max(cur$R,na.rm = T))
   xlim=c(min(cur$GPP,na.rm = T),max(cur$GPP,na.rm = T))
@@ -141,7 +139,7 @@ for(i in 1:length(unique(all_metabload$lake))){ # looping through each lake
   #windows() #use if want each lake in separate plot
   cur<-all_metabload[all_metabload$lake==unique(all_metabload$lake)[i],]
   cur <- cur[!is.na(cur$season),] # only keeping dates that fall within our pre-defined seasons
-  cur <- cur[cur$GPP_SD/cur$GPP<cv_thres&cur$R_SD/cur$R<cv_thres,]#keeping only days that meet CV threshold
+  cur <- cur[cur$GPP_SD/cur$GPP<cv_thres&cur$R_SD/abs(cur$R)<cv_thres,]#keeping only days that meet CV threshold
   col <- rev(grey.colors(n = nrow(cur), start=0, end=1)) #number of colors based on number of rows
   ylim=c(min(cur$R,na.rm = T),max(cur$R,na.rm = T))
   xlim=c(min(cur$GPP,na.rm = T),max(cur$GPP,na.rm = T))
@@ -192,7 +190,7 @@ for(i in 1:length(unique(all_metabst$lake))){ # looping through each lake
   cur$cat<- ifelse(cur$schmidt.stability>y & cur$schmidt.stability<=y1,'2',cur$cat)
   cur$cat<- ifelse(cur$schmidt.stability>y1 & cur$schmidt.stability<=y2,'3',cur$cat)
   cur$cat<- ifelse(cur$schmidt.stability>y2,'4',cur$cat)
-  cur <- cur[cur$GPP_SD/cur$GPP<cv_thres&cur$R_SD/cur$R<cv_thres,]#keeping only days that meet CV threshold
+  cur <- cur[cur$GPP_SD/cur$GPP<cv_thres&cur$R_SD/abs(cur$R)<cv_thres,]#keeping only days that meet CV threshold
   ylim=c(min(cur$R,na.rm = T),max(cur$R,na.rm = T))
   xlim=c(min(cur$GPP,na.rm = T),max(cur$GPP,na.rm = T))
   #cur <- subset(cur, cur$doy>=180&cur$doy<=240) #using this line plots only summer data, need to think about whether you've calculated quartiles within or aross seasons if plotting a subset

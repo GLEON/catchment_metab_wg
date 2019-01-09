@@ -7,7 +7,6 @@ library(ggplot2)
 dir<-'results/metab/20161107/' # directory of metabolism data
 folders<-list.files(dir) # folders in this dir
 folders<-folders[-grep('.doc',folders)] # get rid of README doc
-folders<-folders[-grep('Trout',folders)] # skipping trout for now; have to do bootstrapping on this still
 
 all_metab<-data.frame() # data frame to store all metab data
 for(i in 1:length(folders)){ # loops over all folders in metab directory
@@ -31,13 +30,12 @@ max_doy = 300
 
 metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff) %>%
   group_by(lake) %>%
-  mutate(mean_gpp = mean(GPP, na.rm=T)) %>%
+  dplyr::mutate(mean_gpp = mean(GPP, na.rm=T)) %>%
   ungroup()
 
 dir<-'results/nutrient load/' # directory of load data
 files<-list.files(dir) # folders in this dir
 files<-files[-grep('Readme',files)] # get rid of README doc
-files<-files[-grep('Trout', files)]
 
 all_load<-data.frame() # data frame to store all load data
 for(i in 1:length(files)){ # loops over all files in load directory
@@ -48,8 +46,17 @@ for(i in 1:length(files)){ # loops over all files in load directory
 }
 
 all_load <- as_tibble(all_load) %>%
-  mutate(date = as.Date(Date)) %>%
+  dplyr::mutate(date = as.Date(Date)) %>%
   select(-Date)
+
+# adding in lakes w/o streams to plot
+no_streams <- all_metab[!all_metab$lake%in%all_load$lake, ] %>%
+  select(year, doy, lake, date) %>%
+  rename(Year = year) %>%
+  dplyr::mutate(TN_load = NA, TP_load = NA, DOC_load = NA, inflow = NA) %>%
+  select(Year, doy, TN_load, TP_load, DOC_load, inflow, lake, date)
+
+all_load <- bind_rows(all_load, no_streams)
 
 season_cutoff <- readRDS('results/z_scored_schmidt.rds') %>%
   select(-doy)# seasonal cutoff based on z-scored schmidt stability
@@ -67,9 +74,9 @@ max_doy = 300
 
 load_plot <- dplyr::filter(all_load, doy > min_doy, doy < max_doy) %>%
   group_by(lake) %>%
-  mutate(mean_tp = mean(TP_load / Volume..m3., na.rm=T)) %>%
+  dplyr::mutate(mean_tp = mean(TP_load / Volume..m3., na.rm=T)) %>%
   ungroup() %>%
-  mutate(lake = factor(lake),
+  dplyr::mutate(lake = factor(lake),
          season = factor(season),
          plot_date = as.Date(paste('2001-',doy,sep=''), format = '%Y-%j', tz ='GMT'),
          TP_load = ifelse(TP_load == 0, NA, TP_load),

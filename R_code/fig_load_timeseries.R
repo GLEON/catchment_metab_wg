@@ -50,6 +50,15 @@ all_load <- as_tibble(all_load) %>%
   mutate(date = as.Date(Date)) %>%
   select(-Date)
 
+# adding in lakes w/o streams to plot
+no_streams <- all_metab[!all_metab$lake%in%all_load$lake, ] %>%
+  select(year, doy, lake, date) %>%
+  rename(Year = year) %>%
+  dplyr::mutate(TN_load = NA, TP_load = NA, DOC_load = NA, inflow = NA) %>%
+  select(Year, doy, TN_load, TP_load, DOC_load, inflow, lake, date)
+
+all_load <- bind_rows(all_load, no_streams)
+
 season_cutoff <- readRDS('results/z_scored_schmidt.rds') %>%
   select(-doy)# seasonal cutoff based on z-scored schmidt stability
 all_load <- left_join(all_load, season_cutoff, by = c('lake' = 'lake', 'date' = 'date'))
