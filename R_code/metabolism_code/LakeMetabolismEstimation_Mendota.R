@@ -2,6 +2,7 @@
 # 2015-05-19;
 # for(i in 12:17){
 library(dplyr)
+library(LakeMetabolizer)
 
 i=10
 toRm=ls()
@@ -119,6 +120,10 @@ colnames(z.mix)<-c('datetime','z.mix','bottom')
 # doobs$datetime<-strftime(align.time(as.POSIXct(doobs$datetime,'%Y-%m-%d %H:%M:%S',tz=''),n=600),'%Y-%m-%d %H:%M:%S')
 # doobs$datetime<-as.POSIXct(doobs$datetime)
 
+blip = read.csv('data/metab_data/Mendota/blip_detect.csv', stringsAsFactors = F) %>%
+  dplyr::mutate(date = as.Date(date, '%m/%d/%Y')) %>% as_tibble()
+
+
 # merge variables into one data frame
 ts.data<-doobs
 ts.data<-merge(ts.data,do.sat)
@@ -135,22 +140,34 @@ sun<-data.frame(matrix(sun,ncol=2))
 colnames(sun)<-c('sunrise','sunset')
 sun$sunrise<-as.POSIXct(sun$sunrise,origin='1970-01-01')
 sun$sunset<-as.POSIXct(sun$sunset,origin='1970-01-01')
-# account for daylight savings...
-# sun$sunrise<-sun$sunrise+60*60
-# sun$sunset<-sun$sunset+60*60
 ts.data$sunrise<-sun$sunrise
+
+# getting rid of first ~5 hrs of DO after sunrise because of the early morning blip which was also seen in Richardson et al. 2016
+hr = 6 # hours after sunrise to get rid of DO data
+after_rise = 0 # hours after sunrise before getting rid of DO data
+
+ts.data2 = ts.data %>%
+  dplyr::mutate(date = as.Date(datetime)) %>% left_join(blip, by = 'date') %>%
+  group_by(date) %>%
+  dplyr::mutate(doobs = ifelse(datetime > (sunrise + 60*60*after_rise) & datetime < (sunrise + 60*60*hr) & blip_T_F == T, NA, doobs)) %>%
+  ungroup() %>%
+  select(doobs)
+
+ts.data.book = ts.data # saving old DO data for bookkeeping method
+ts.data$doobs <- ts.data2$doobs
 
 # metabolism function requires do.obs, do.sat, irr, k.gas, z.mix, wtr (wtr at depth of DO probe )
 error.type='OE' # observation error or process error specification for MLE (OE fits initial DO)
 logged=T # whether or not to log /exponentiate parameter estimates for constraining positive /negative
-bootstrap=F # whether or not to bootstrap the fits to produce distribution of fitted parameters (uncertainty in parameter estimate)
+bootstrap=T # whether or not to bootstrap the fits to produce distribution of fitted parameters (uncertainty in parameter estimate)
 n.boot=1000 # how many iterations in bootstrapping if bootstrap = T
 ar1.resids=T # maintain autocorrelation in residuals when bootstrapping if True
 guesses=c(1E-2,1E-2) # MLE guesses for gppCoeff and rCoeff
 # guesses=c(1,1E-2,1E-2) # MLE guess for gppMaxCoeff, gppCoeff, and rCoeff for light saturating function
 nDaysSim=1 #number of days over which to estimate metab coefficients
 optim_method='Nelder-Mead'
-sunrise=T # if True, fit model from sunrise to sunrise
+sunrise=F # if True, fit model from sunrise to sunrise
+percentReqd = 0.5 # fraction of data required to fit model - decreasing so that we can take some DO data out of time series
 # source('/Users/jzwart/Documents/Jake/MyPapers/GLEON Catchment & Lake Metabolism/R Code/metab.support.R')
 # source('/Users/jzwart/Documents/Jake/MyPapers/GLEON Catchment & Lake Metabolism/R Code/metab.support.lightSaturating.R') # light saturating GPP functions
 # dyn.load('/Users/jzwart/Documents/Jake/MyPapers/GLEON Catchment & Lake Metabolism/C Code/mleLoopLightSat.dll') # loading in compiled C code for looping
@@ -158,8 +175,8 @@ sunrise=T # if True, fit model from sunrise to sunrise
 metab.out<-my.metab(data=ts.data,method = 'mle',wtr.name = colnames(ts.data[grep('wtr',colnames(ts.data))]),
                             irr.name = 'par',do.obs.name = 'doobs',error.type=error.type,logged=logged,
                     bootstrap=bootstrap,n.boot=n.boot,ar1.resids=ar1.resids,
-                    guesses=guesses,nDaysSim=nDaysSim,optim_method=optim_method,sunrise=sunrise)
-metab.out.book<-metab(data=ts.data,method = 'bookkeep',wtr.name = colnames(ts.data[grep('wtr',colnames(ts.data))]),
+                    guesses=guesses,nDaysSim=nDaysSim,optim_method=optim_method,sunrise=sunrise, percentReqd = percentReqd)
+metab.out.book<-metab(data=ts.data.book,method = 'bookkeep',wtr.name = colnames(ts.data.book[grep('wtr',colnames(ts.data.book))]),
                     irr.name = 'par',do.obs.name = 'doobs',lake.lat=lat)
 # metab.out.kalman<-metab(data=ts.data,method = 'kalman',wtr.name = colnames(ts.data[grep('wtr',colnames(ts.data))]),
 #                       irr.name = 'par',do.obs.name = 'doobs',lake.lat=lat)
@@ -173,50 +190,26 @@ plot(metab.out$GPP, type = 'o')
 windows()
 plot(metab.out$R, type = 'o')
 windows()
-plot(metab.out$NEP)
+plot(metab.out$NEP, type = 'o')
 
-plot(ma.weighted(metab.out$GPP,metab.out$GPP_SD/metab.out$GPP,7),type='l')
-plot(ma.weighted(metab.out$R,metab.out$R_SD/metab.out$R,7),type='l')
-plot(ma.weighted(metab.out$GPP,metab.out$GPP_SD/metab.out$GPP,7)+ma.weighted(metab.out$R,metab.out$R_SD/metab.out$R,7)~metab.out$doy,type='l')
+# plot(ma.weighted(metab.out$GPP,metab.out$GPP_SD/metab.out$GPP,7),type='l')
+# plot(ma.weighted(metab.out$R,metab.out$R_SD/metab.out$R,7),type='l')
+# plot(ma.weighted(metab.out$GPP,metab.out$GPP_SD/metab.out$GPP,7)+ma.weighted(metab.out$R,metab.out$R_SD/metab.out$R,7)~metab.out$doy,type='l')
 
-compare = dplyr::left_join(metab.out.book, metab.out, by = c('doy' = 'doy'), suffix = c('book', 'mle'))
-windows()
-plot(compare$GPPbook~compare$GPPmle)
-abline(0,1)
-plot(compare$GPPmle,compare$Rmle)
-abline(0,-1)
+# compare = dplyr::left_join(metab.out.book, metab.out, by = c('doy' = 'doy'), suffix = c('book', 'mle'))
+# windows()
+# plot(compare$GPPbook~compare$GPPmle)
+# abline(0,1)
+# plot(compare$GPPmle,compare$Rmle)
+# abline(0,-1)
 
 # predicted DO based on parameter estimates
 pars<-attr(metab.out,'par') # parameters fit using MLE
 wtr.name = colnames(ts.data[grep('wtr',colnames(ts.data))])
 irr.name = 'par'
 do.obs.name = 'doobs'
-# #Rename the WTR column to be used (must be wtr to easily be passed to meta.* functions)
-# if(wtr.name != "wtr"){
-#   if(!"wtr"%in%names(ts.data)){
-#     names(ts.data)[names(ts.data)==wtr.name] <- "wtr"
-#   }else{
-#     ts.data[,"wtr"] <- ts.data[,wtr.name]
-#   }
-# }
-#
-# if(irr.name != "irr"){
-#   if(!"irr"%in%names(ts.data)){
-#     names(ts.data)[names(ts.data)==irr.name] <- "irr"
-#   }else{
-#     ts.data[,"irr"] <- ts.data[,irr.name]
-#   }
-# }
-#
-# if(do.obs.name != "do.obs"){
-#   if(!"do.obs"%in%names(ts.data)){
-#     names(ts.data)[names(ts.data)==do.obs.name] <- "do.obs"
-#   }else{
-#     ts.data[,"do.obs"] <- ts.data[,do.obs.name]
-#   }
-# }
 
-data1 <- addNAs(ts.data[complete.cases(ts.data),], percentReqd=1) # note that addNAs ALSO checks for POSIXct datetime, and adds year/doy
+data1 <- addNAs(ts.data[complete.cases(ts.data),], percentReqd = percentReqd) # note that addNAs ALSO checks for POSIXct datetime, and adds year/doy
 data2 <- data1[complete.cases(data1),]
 
 ids <- id(list(data2[,"year"],trunc(data2[,"doy"]))) # ID chunks to be analyzed
@@ -334,7 +327,7 @@ metab.out.book <- metab.out.book %>%
          nll.nll = NA,
          converge.converge = NA)
 
-write.table(metab.out.book,
+write.table(metab.out,
             file.path('results/metab/20161107/',lake,paste(lake,'metabEst.txt',sep='_')),
             row.names=F,sep='\t',quote=F)
 
