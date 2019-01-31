@@ -227,7 +227,8 @@ lake_load_stoich <- ggplot(load_plot, aes(x = plot_date, y = DOC_load/TP_load, g
 
 lake_load_stoich
 
-ggsave('figures/fig_stoich_timeseries.png', plot = stoich, width = 10, height = 10)
+ggsave('figures/fig_load_stoich_timeseries.png', plot = load_stoich, width = 10, height = 10)
+ggsave('figures/fig_lake_stoich_timeseries.png', plot = lake_stoich, width = 10, height = 10)
 
 
 ave_load = load_plot %>%
