@@ -25,7 +25,7 @@ season_cutoff <- readRDS('results/z_scored_schmidt.rds') %>%
   select(-doy)# seasonal cutoff based on z-scored schmidt stability
 all_metab <- left_join(all_metab, season_cutoff, by = c('lake' = 'lake', 'date' = 'date'))
 
-cv_cutoff = 10
+cv_cutoff = 4
 min_doy = 120
 max_doy = 300
 
