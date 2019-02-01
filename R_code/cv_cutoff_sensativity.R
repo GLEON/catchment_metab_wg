@@ -5,7 +5,7 @@ library(dplyr)
 dir<-'results/metab/20161107/' # directory of metabolism data
 folders<-list.files(dir) %>% # folders in this dir
   tbl_df() %>%
-  dplyr::filter(!grepl('.doc|Trout', value)) # get rid of README doc; skipping trout for now --> have to do bootstrapping on this still
+  dplyr::filter(!grepl('.doc', value)) # get rid of README doc; skipping trout for now --> have to do bootstrapping on this still
 
 all_metab <- lapply(folders$value, function(lake){
   cur = read.table(file.path(dir,lake,paste(lake,'_metabEst.txt',sep='')), header=T, sep='\t', stringsAsFactors = F) %>%
@@ -30,19 +30,19 @@ cv_seq <- seq(0, 10, by = 0.25)
 
 cv_sens_out <- tidyr::crossing(all_metab, cv_seq) %>%
   dplyr::filter(!is.na(season)) %>%
-  group_by(lake, cv_seq, season) %>%
-  mutate(total_obs = n()) %>%
+  dplyr::group_by(lake, cv_seq, season) %>%
+  dplyr::mutate(total_obs = n()) %>%
   dplyr::filter((GPP_SD/GPP) < cv_seq,
                 (R_SD/-R) < cv_seq) %>%
-  summarise(mean_gpp = mean(GPP),
+  dplyr::summarise(mean_gpp = mean(GPP),
             mean_r = mean(R),
             r_gpp_coeff = summary(lm(R~GPP))$coeff[2],
             r_gpp_int = summary(lm(R~GPP))$coeff[1],
             n_obs = n(),
             total_obs = mean(total_obs)) %>%
-  ungroup() %>%
-  rename(cv_cutoff = cv_seq) %>%
-  mutate(frac_obs = n_obs / total_obs)
+  dplyr::ungroup() %>%
+  dplyr::rename(cv_cutoff = cv_seq) %>%
+  dplyr::mutate(frac_obs = n_obs / total_obs)
 
 cv_sens_out
 
@@ -112,9 +112,10 @@ windows()
 ggplot(season_table, aes(x = lake, y = obs)) +
   geom_bar(aes(fill = season), position = 'dodge', stat = 'identity')
 
-cv_sens_out %>%
-  dplyr::filter(cv_cutoff==2) %>%
+out = cv_sens_out %>%
+  dplyr::filter(cv_cutoff==4) %>%
   select(lake, cv_cutoff, n_obs, total_obs, frac_obs)
+
 
 
 

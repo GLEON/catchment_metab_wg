@@ -24,7 +24,7 @@ season_cutoff <- readRDS('results/z_scored_schmidt.rds') %>%
   select(-doy)# seasonal cutoff based on z-scored schmidt stability
 all_metab <- left_join(all_metab, season_cutoff, by = c('lake' = 'lake', 'date' = 'date'))
 
-cv_cutoff = 10
+cv_cutoff = 4
 min_doy = 120
 max_doy = 300
 
@@ -86,14 +86,15 @@ in_lake_nutrients = in_lake_nutrients %>%
                           lake == 'Övre_Björntjärn' ~ 'Ovre',
                           lake == 'Struptjärn' ~ 'Struptjarn',
                           lake == 'Lilli' ~ 'Lillinonah',
-                          TRUE ~ lake))
-  # left_join(season_cutoff, by = c('lake' = 'lake', 'date' = 'date')) %>%
-  # left_join(metaData, by = c('lake' = 'Lake.Name')) %>%
-  # left_join(dplyr::select(metab_plot, lake, date, mean_gpp), by = c('lake'='lake','date'='date'))
+                          TRUE ~ lake),
+         DOC = case_when(lake != 'Trout' ~ DOC,
+                         lake == 'Trout' & DOC < 10 ~ DOC),# getting rid of DOC outlier for Trout
+         TP = case_when(lake != 'Trout' ~ TP,
+                        lake == 'Trout' & TP > 0 ~ TP)) # getting rid of undetected TP for Trout
 
 all_load = left_join(all_load, in_lake_nutrients, by = c('lake' = 'lake', 'date' = 'date'))
 
-cv_cutoff = 10
+cv_cutoff = 4
 min_doy = 120
 max_doy = 300
 
@@ -219,7 +220,7 @@ lake_load_stoich <- ggplot(load_plot, aes(x = plot_date, y = DOC_load/TP_load, g
                                 'b' = '#CC79A7',
                                 'c' = '#D55E00'),
                      labels = c('C:P', 'N:P', 'C:N')) +
-  ylab(expression(Load~Stoichiometry~(mol:mol))) +
+  ylab(expression(Load~or~Lake~Stoichiometry~(mol:mol))) +
   scale_y_log10() +
   geom_hline(yintercept = 106, color = 'black', linetype = 'dashed')+ # redfield ratios
   geom_hline(yintercept = 16, color ='#CC79A7', linetype = 'dashed')+
@@ -257,6 +258,19 @@ ggplot(ave_load, aes(x = TN_load/TP_load, y = TN/TP)) +
 
 
 
-
-
-
+ggplot(load_plot, aes(x = plot_date, y = TN_load/TP_load, group = lake, color = lake)) +
+  geom_line(size = 2, alpha = .6) +
+  # geom_line(data = load_plot, aes(x = plot_date, y = TN_load / TP_load, group = lake, color = 'b'), size = 1)+
+  # geom_line(data = load_plot, aes(x = plot_date, y = DOC_load / TN_load, group = lake, color = 'c'), size = 1)+
+  # facet_wrap(~lake, labeller = as_labeller(lake_names), strip.position = 'top') +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        axis.title.x = element_blank(),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  ylab(expression(N:P~Load~Stoichiometry~(mol:mol))) +
+  scale_y_log10() +
+  geom_hline(yintercept = 16, color = 'black', linetype = 'dashed') # redfield ratios

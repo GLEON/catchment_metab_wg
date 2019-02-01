@@ -79,6 +79,8 @@ load_plot <- dplyr::filter(all_load, doy > min_doy, doy < max_doy) %>%
             mean_tn_load = mean(TN_load / Volume..m3., na.rm =T),
             mean_doc_load = mean(DOC_load / Volume..m3., na.rm=T),
             mean_doc_tp_load = mean((DOC_load / 12) / (TP_load/31), na.rm=T),
+            mean_doc_tn_load = mean((DOC_load / 12) / (TN_load/14), na.rm=T),
+            mean_tn_tp_load = mean((TN_load / 14) / (TP_load/31), na.rm=T),
             kD = mean(kD)) %>%
   ungroup()
 
@@ -112,7 +114,7 @@ lake_names <- c('Acton' = 'Acton Lake',
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7") # colorblind-friendly pallete
 
 gpp_tp <- ggplot(plot_data, aes(x = mean_tp_load * 1000*1000, y = mean_gpp, group = lake)) +
-  geom_point(size = 8) +
+  geom_point(size = 8, alpha = .5) +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
@@ -124,7 +126,7 @@ gpp_tp <- ggplot(plot_data, aes(x = mean_tp_load * 1000*1000, y = mean_gpp, grou
   ylab(expression(GPP~(mg~O[2]~L^-1~day^-1)))
 
 gpp_tn <- ggplot(plot_data, aes(x = mean_tn_load * 1000*1000, y = mean_gpp, group = lake)) +
-  geom_point(size = 8) +
+  geom_point(size = 8,alpha = .5) +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
@@ -136,7 +138,7 @@ gpp_tn <- ggplot(plot_data, aes(x = mean_tn_load * 1000*1000, y = mean_gpp, grou
   ylab(expression(GPP~(mg~O[2]~L^-1~day^-1)))
 
 gpp_doc <- ggplot(plot_data, aes(x = mean_doc_load * 1000*1000, y = mean_gpp, group = lake)) +
-  geom_point(size = 8) +
+  geom_point(size = 8, alpha =.5) +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
@@ -148,7 +150,7 @@ gpp_doc <- ggplot(plot_data, aes(x = mean_doc_load * 1000*1000, y = mean_gpp, gr
   ylab(expression(GPP~(mg~O[2]~L^-1~day^-1)))
 
 gpp_doc_tp <- ggplot(plot_data, aes(x = mean_doc_tp_load, y = mean_gpp, group = lake)) +
-  geom_point(size = 8) +
+  geom_point(size = 8, alpha=.5) +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
@@ -160,12 +162,38 @@ gpp_doc_tp <- ggplot(plot_data, aes(x = mean_doc_tp_load, y = mean_gpp, group = 
   ylab(expression(GPP~(mg~O[2]~L^-1~day^-1))) +
   scale_x_log10()
 
-g = plot_grid(gpp_tp, gpp_tn, gpp_doc, gpp_doc_tp,
-          labels = c('A', 'B', 'C', 'D'), align = 'hv',nrow = 2)
+gpp_doc_tn <- ggplot(plot_data, aes(x = mean_doc_tn_load, y = mean_gpp, group = lake)) +
+  geom_point(size = 8, alpha=.5) +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  xlab(expression(Load~C:N~(mol:mol))) +
+  ylab(expression(GPP~(mg~O[2]~L^-1~day^-1))) +
+  scale_x_log10()
+
+gpp_tn_tp <- ggplot(plot_data, aes(x = mean_tn_tp_load, y = mean_gpp, group = lake)) +
+  geom_point(size = 8, alpha=.5) +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  xlab(expression(Load~N:P~(mol:mol))) +
+  ylab(expression(GPP~(mg~O[2]~L^-1~day^-1))) +
+  scale_x_log10()
+
+g = plot_grid(gpp_tp, gpp_tn, gpp_doc, gpp_doc_tp, gpp_doc_tn, gpp_tn_tp,
+          labels = c('A', 'B', 'C', 'D', 'E','F'), align = 'hv',nrow = 3)
 
 g
 
-ggsave('figures/fig_gpp_loads.png', plot = g, width = 10, height = 10)
+ggsave('figures/fig_gpp_loads.png', plot = g, width = 10, height = 15)
 
 
 r_tp <- ggplot(plot_data, aes(x = mean_tp_load * 1000*1000, y = mean_r, group = lake)) +
