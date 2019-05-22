@@ -1,6 +1,7 @@
 # plotting load timeseries for figure 2
 
 library(dplyr)
+library(cowplot)
 library(ggplot2)
 library(yaml)
 
@@ -30,9 +31,11 @@ cv_cutoff = analysis_cfg$cv_cutoff
 min_doy = analysis_cfg$min_doy
 max_doy = analysis_cfg$max_doy
 
-metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff, R_SD/abs(R) < cv_cutoff, GPP > 0, R < 0) %>%
+metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff) %>%
   group_by(lake) %>%
-  dplyr::mutate(mean_gpp = mean(GPP, na.rm=T)) %>%
+  dplyr::summarise(mean_gpp = mean(GPP, na.rm=T),
+            mean_r = mean(R, na.rm =T),
+            mean_nep = mean(NEP, na.rm=T)) %>%
   ungroup()
 
 #### loading in nutrient load time series ###
@@ -49,7 +52,7 @@ for(i in 1:length(files)){ # loops over all files in load directory
 }
 
 all_load <- as_tibble(all_load) %>%
-  mutate(date = as.Date(Date)) %>%
+  dplyr::mutate(date = as.Date(Date)) %>%
   select(-Date)
 
 # adding in lakes w/o streams to plot
@@ -66,10 +69,14 @@ season_cutoff <- readRDS('results/z_scored_schmidt.rds') %>%
 all_load <- left_join(all_load, season_cutoff, by = c('lake' = 'lake', 'date' = 'date'))
 
 metaData <- read.csv('data/metadataLookUp.csv',stringsAsFactor=F) %>%
-  select(Lake.Name, Volume..m3., Surface.Area..m2., Catchment.Area..km2., Lake.Residence.Time..year.)
+  select(Lake.Name, Volume..m3., Surface.Area..m2., Catchment.Area..km2., Lake.Residence.Time..year., kD)
 all_load <- left_join(all_load, metaData, by = c('lake' = 'Lake.Name'))
 
-all_load <- left_join(all_load, dplyr::select(metab_plot, lake, date, mean_gpp), by = c('lake'='lake','date'='date'))
+# Units for nutrient load files = kg/day for TP, TN, DOC and m3/s for inflow
+all_load <- all_load %>%
+  mutate(ave_tp_conc_load_mol_m3 = TP_load / 31 * 1000 / (inflow * 86400),
+         ave_tn_conc_load_mol_m3 = TN_load / 14 * 1000 / (inflow * 86400),
+         ave_doc_conc_load_mol_m3 = DOC_load / 12 * 1000 / (inflow * 86400))
 
 cv_cutoff = analysis_cfg$cv_cutoff
 min_doy = analysis_cfg$min_doy
@@ -77,20 +84,26 @@ max_doy = analysis_cfg$max_doy
 
 load_plot <- dplyr::filter(all_load, doy > min_doy, doy < max_doy) %>%
   group_by(lake) %>%
-  dplyr::mutate(mean_tp = mean(TP_load / Volume..m3., na.rm=T)) %>%
-  ungroup() %>%
-  dplyr::mutate(lake = factor(lake),
-         season = factor(season),
-         plot_date = as.Date(paste('2001-',doy,sep=''), format = '%Y-%j', tz ='GMT'),
-         TP_load = ifelse(TP_load == 0, NA, TP_load))
+  dplyr::summarise(mean_tp_load = mean(TP_load / Volume..m3., na.rm=T),
+            mean_tn_load = mean(TN_load / Volume..m3., na.rm =T),
+            mean_doc_load = mean(DOC_load / Volume..m3., na.rm=T),
+            mean_doc_tp_load = mean((DOC_load / 12) / (TP_load/31), na.rm=T),
+            mean_doc_tn_load = mean((DOC_load / 12) / (TN_load/14), na.rm=T),
+            mean_tn_tp_load = mean((TN_load / 14) / (TP_load/31), na.rm=T),
+            mean_tp_conc_load_mol_m3 = mean(ave_tp_conc_load_mol_m3, na.rm = T),
+            mean_tn_conc_load_mol_m3 = mean(ave_tn_conc_load_mol_m3, na.rm = T),
+            mean_doc_conc_load_mol_m3 = mean(ave_doc_conc_load_mol_m3, na.rm = T),
+            mean_inflow_m3 = mean((inflow * 86400), na.rm = T),
+            kD = mean(kD)) %>%
+  ungroup()
+
+plot_data <- left_join(load_plot, metab_plot, by = 'lake')
 
 #ordering by mean inflow
-lakes_sorted <- load_plot$lake[sort.list(load_plot$mean_gpp)]
+lakes_sorted <- plot_data$lake[sort.list(plot_data$mean_gpp)]
 lakes_sorted <- as.character(lakes_sorted[!duplicated(lakes_sorted)])
-seasons_sorted <- c('spring','summer','fall')
 
-load_plot$lake <- factor(load_plot$lake,levels = lakes_sorted)
-load_plot$season <- factor(load_plot$season, levels = seasons_sorted)
+plot_data$lake <- factor(plot_data$lake,levels = lakes_sorted)
 
 # facet labeller
 lake_names <- c('Acton' = 'Acton Lake',
@@ -113,98 +126,50 @@ lake_names <- c('Acton' = 'Acton Lake',
 
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7") # colorblind-friendly pallete
 
-# keeping x and y axis scales the same for every plot
-load <- ggplot(load_plot, aes(x = plot_date, y = TP_load * 1000 *1000/ Volume..m3., group = lake ,color = season)) +
-  geom_line(size = 1) +
-  facet_wrap(~lake, labeller = as_labeller(lake_names), strip.position = 'top') +
+doc_tp <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tp_load *1000*1000, group = lake)) +
+  geom_point(size = 8, alpha = .5) +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
         axis.title = element_text(size = 16),
         axis.text = element_text(size = 12),
-        axis.title.x = element_blank(),
         legend.title = element_blank(),
         legend.text = element_text(size =12)) +
-  scale_color_manual(name = 'season',
-                     values = c('spring' = '#009E73',
-                                'summer' = '#56B4E9',
-                                'fall' = '#E69F00',
-                                'NA' = 'white'),
-                     labels = c('Spring', 'Summer', 'Fall', '')) +
-  scale_fill_manual(name = 'season',
-                     values = c('spring' = '#009E73',
-                                'summer' = '#56B4E9',
-                                'fall' = '#E69F00',
-                                'NA' = 'white'),
-                     labels = c('Spring', 'Summer', 'Fall', '')) +
-  ylab(expression(TP~Load~(mg~m^-3~day^-1)))  +
-  scale_y_log10() +
-  scale_x_date(date_labels = '%b')
+  xlab(expression(DOC~Load~(mg~m^-3~day^-1))) +
+  ylab(expression(TP~Load~(mg~m^-3~day^-1)))
 
-# load
-
-ggsave('figures/fig_tp_load_timeseries.png', plot = load, width = 10, height = 10)
-
-# keeping x and y axis scales the same for every plot
-load <- ggplot(load_plot, aes(x = plot_date, y = TN_load * 1000 *1000/ Volume..m3., group = lake ,color = season)) +
-  geom_line(size = 1) +
-  facet_wrap(~lake, labeller = as_labeller(lake_names), strip.position = 'top') +
+doc_tn <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tn_load *1000*1000, group = lake)) +
+  geom_point(size = 8, alpha = .5) +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
         axis.title = element_text(size = 16),
         axis.text = element_text(size = 12),
-        axis.title.x = element_blank(),
         legend.title = element_blank(),
         legend.text = element_text(size =12)) +
-  scale_color_manual(name = 'season',
-                     values = c('spring' = '#009E73',
-                                'summer' = '#56B4E9',
-                                'fall' = '#E69F00',
-                                'NA' = 'white'),
-                     labels = c('Spring', 'Summer', 'Fall', '')) +
-  scale_fill_manual(name = 'season',
-                    values = c('spring' = '#009E73',
-                               'summer' = '#56B4E9',
-                               'fall' = '#E69F00',
-                               'NA' = 'white'),
-                    labels = c('Spring', 'Summer', 'Fall', '')) +
-  ylab(expression(TN~Load~(mg~m^-3~day^-1)))  +
-  scale_y_log10() +
-  scale_x_date(date_labels = '%b')
+  xlab(expression(DOC~Load~(mg~m^-3~day^-1))) +
+  ylab(expression(TN~Load~(mg~m^-3~day^-1)))
 
-# load
-
-ggsave('figures/fig_tn_load_timeseries.png', plot = load, width = 10, height = 10)
-
-# keeping x and y axis scales the same for every plot
-load <- ggplot(load_plot, aes(x = plot_date, y = DOC_load * 1000 *1000/ Volume..m3., group = lake ,color = season)) +
-  geom_line(size = 1) +
-  facet_wrap(~lake, labeller = as_labeller(lake_names), strip.position = 'top') +
+tn_tp <- ggplot(plot_data, aes(x = mean_tn_load *1000*1000, y = mean_tp_load *1000*1000, group = lake)) +
+  geom_point(size = 8, alpha = .5) +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
         axis.title = element_text(size = 16),
         axis.text = element_text(size = 12),
-        axis.title.x = element_blank(),
         legend.title = element_blank(),
         legend.text = element_text(size =12)) +
-  scale_color_manual(name = 'season',
-                     values = c('spring' = '#009E73',
-                                'summer' = '#56B4E9',
-                                'fall' = '#E69F00',
-                                'NA' = 'white'),
-                     labels = c('Spring', 'Summer', 'Fall', '')) +
-  scale_fill_manual(name = 'season',
-                    values = c('spring' = '#009E73',
-                               'summer' = '#56B4E9',
-                               'fall' = '#E69F00',
-                               'NA' = 'white'),
-                    labels = c('Spring', 'Summer', 'Fall', '')) +
-  ylab(expression(DOC~Load~(mg~m^-3~day^-1)))  +
-  scale_y_log10() +
-  scale_x_date(date_labels = '%b')
+  xlab(expression(TN~Load~(mg~m^-3~day^-1))) +
+  ylab(expression(TP~Load~(mg~m^-3~day^-1)))
 
-# load
+tn_tp
 
-ggsave('figures/fig_doc_load_timeseries.png', plot = load, width = 10, height = 10)
+
+g = plot_grid(doc_tn, doc_tp, tn_tp,
+              labels = c('A', 'B', 'C'), align = 'hv',nrow = 2)
+
+g
+
+ggsave('figures/fig_load_1_to_1.png', plot = g, width = 10, height = 10)
+
+
