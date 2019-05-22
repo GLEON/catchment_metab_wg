@@ -4,6 +4,7 @@ library(dplyr)
 library(cowplot)
 library(ggplot2)
 library(yaml)
+library(MuMIn)
 
 analysis_cfg <- yaml::yaml.load_file('lib/cfg/analysis_cfg.yml') # this file holds important analysis info such as CV cutoff
 ### loading in metabolism data for sorting by mean GPP ###
@@ -134,19 +135,44 @@ lakes_sorted <- as.character(lakes_sorted[!duplicated(lakes_sorted)])
 
 plot_data$lake <- factor(plot_data$lake,levels = lakes_sorted)
 
-fit = lm(plot_data$mean_gpp~plot_data$mean_doc_load+plot_data$mean_doc_tp_load+plot_data$mean_doc_tn_load+plot_data$mean_tn_tp_load)
+## multi model selection based on AIC
 
-fit = lm(mean_gpp ~ mean_tp_load + mean_doc_tp_load + mean_doc_tn_load + mean_tn_tp_load + mean_doc_load + kD + mean_tp_conc_load_mol_m3 + mean_tn_conc_load_mol_m3, data = plot_data)
+# GPP
+options(na.action = 'na.fail')
 
-fit = lm(plot_data$mean_tp_conc_load_mol_m3 ~ plot_data$mean_lake_tp)
+predictors = c('mean_tp_load', 'mean_doc_tp_load', 'mean_doc_tn_load', 'mean_tn_tp_load', 'mean_tn_load', 'mean_doc_load', 'kD', 'mean_tp_conc_load_mol_m3', 'mean_tn_conc_load_mol_m3', 'mean_doc_conc_load_mol_m3')
+gpp_data = select(plot_data, rbind('mean_gpp',predictors)) %>% na.omit()
+gpp_corr_matrix = gpp_data %>% as.matrix() %>% Hmisc::rcorr()
 
-summary(fit)
+global_model_gpp = lm(mean_gpp ~ ., data = gpp_data)
 
-fit_vals = fit$fitted.values
-obs_gpp = plot_data$mean_gpp[as.numeric(names(fit_vals))]
-obs_tp = plot_data$mean_tp_conc_load_mol_m3[as.numeric(names(fit_vals))]
-plot(obs_gpp, fit_vals)
-abline(0,1,lwd = 2, lty =2 )
-points(obs_gpp, fit_vals, pch = 16, cex = 2)
+all_gpp_mods = dredge(global_model_gpp) %>% dplyr::filter(delta <= 2) %>% as_tibble()
+all_gpp_mods
+
+# ER
+r_data = select(plot_data, rbind('mean_r',predictors)) %>% na.omit() %>% mutate(mean_r = mean_r * -1)
+
+global_model_r = lm(mean_r ~ ., data = r_data)
+
+all_r_mods = dredge(global_model_r) %>% dplyr::filter(delta <= 2) %>% as_tibble()
+all_r_mods
+
+# NEP
+nep_data = select(plot_data, rbind('mean_nep',predictors)) %>% na.omit()
+
+global_model_nep = lm(mean_nep ~ ., data = nep_data)
+
+all_nep_mods = dredge(global_model_nep) %>% dplyr::filter(delta <= 2) %>% as_tibble()
+all_nep_mods
+
+
+# false discovery rate control
+gpp_fdr = as_tibble(gpp_corr_matrix$P) %>%
+  select(mean_gpp) %>%
+  mutate(predictor = rownames(gpp_corr_matrix$P)) %>%
+  rename(pval = mean_gpp) %>%
+  na.omit()
+
+fdrtool(gpp_fdr$pval, statistic = 'pvalue')
 
 
