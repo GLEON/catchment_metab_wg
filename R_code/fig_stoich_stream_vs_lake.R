@@ -113,15 +113,17 @@ load_plot <- dplyr::filter(all_load, doy > min_doy, doy < max_doy) %>%
          DOC_load = DOC_load / 12,
          TP = TP / 1000 / 31, # converting to mol/m3
          TN = TN / 1000 / 14,
-         DOC = DOC / 12)
+         DOC = DOC / 12) %>%
+  group_by(lake) %>%
+  dplyr::summarise(mean_c_p_load = mean(DOC_load/TP_load, na.rm = T),
+                   mean_c_n_load = mean(DOC_load/TN_load, na.rm = T),
+                   mean_n_p_load = mean(TN_load/TP_load, na.rm = T),
+                   mean_c_p = mean(DOC/TP, na.rm = T),
+                   mean_c_n = mean(DOC/TN, na.rm = T),
+                   mean_n_p = mean(TN/TP, na.rm = T)) %>%
+  ungroup()
 
-#ordering by mean gpp
-lakes_sorted <- load_plot$lake[sort.list(load_plot$mean_gpp)]
-lakes_sorted <- as.character(lakes_sorted[!duplicated(lakes_sorted)])
-seasons_sorted <- c('spring','summer','fall')
 
-load_plot$lake <- factor(load_plot$lake,levels = lakes_sorted)
-load_plot$season <- factor(load_plot$season, levels = seasons_sorted)
 
 # facet labeller
 lake_names <- c('Acton' = 'Acton Lake',
@@ -145,134 +147,47 @@ lake_names <- c('Acton' = 'Acton Lake',
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7") # colorblind-friendly pallete
 
 # keeping x and y axis scales the same for every plot
-load_stoich <- ggplot(load_plot, aes(x = plot_date, y = DOC_load/TP_load, group = lake)) +
-  geom_line(aes(color = 'a'), size = 1) +
-  geom_line(data = load_plot, aes(x = plot_date, y = TN_load / TP_load, group = lake, color = 'b'), size = 1)+
-  geom_line(data = load_plot, aes(x = plot_date, y = DOC_load / TN_load, group = lake, color = 'c'), size = 1)+
-  facet_wrap(~lake, labeller = as_labeller(lake_names), strip.position = 'top') +
+load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_p_load, y = mean_c_p, group = lake)) +
+  geom_point(size = 8) +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
         axis.title = element_text(size = 16),
         axis.text = element_text(size = 12),
-        axis.title.x = element_blank(),
         legend.title = element_blank(),
         legend.text = element_text(size =12)) +
-  scale_color_manual(name = '',
-                     values = c('a' = 'black',
-                                'b' = '#CC79A7',
-                                'c' = '#D55E00'),
-                     labels = c('C:P', 'N:P', 'C:N')) +
-  ylab(expression(Load~Stoichiometry~(mol:mol))) +
-  scale_y_log10() +
-  geom_hline(yintercept = 106, color = 'black', linetype = 'dashed')+ # redfield ratios
-  geom_hline(yintercept = 16, color ='#CC79A7', linetype = 'dashed')+
-  geom_hline(yintercept = 6.6, color = '#D55E00', linetype = 'dashed')
-  # geom_hline(yintercept = 374.6, color = 'black', linetype = 'dashed')+ # maranger et al 2018 average stoich of watershed inputs for comparison
-  # geom_hline(yintercept = 24.1, color ='#CC79A7', linetype = 'dashed')+
-  # geom_hline(yintercept = 15.5, color = '#D55E00', linetype = 'dashed')
-windows()
-load_stoich
+  xlab(expression(C:P~Load~Stoichiometry~(mol:mol))) +
+  ylab(expression(C:P~Lake~Stoichiometry~(mol:mol))) +
+  geom_abline(slope = 1, color = 'black', linetype = 'dashed') # redfield ratios
 
-in_lake_stoich = ggplot(load_plot, aes(x = plot_date, y = DOC/TP, group = lake)) +
-  geom_point(aes(color = 'a'), size = 1) +
-  geom_point(data = load_plot, aes(x = plot_date, y = TN / TP, group = lake, color = 'b'), size = 1)+
-  geom_point(data = load_plot, aes(x = plot_date, y = DOC / TN, group = lake, color = 'c'), size = 1)+
-  facet_wrap(~lake, labeller = as_labeller(lake_names), strip.position = 'top') +
+load_vs_lake_stoich
+
+load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_n_load, y = mean_c_n, group = lake)) +
+  geom_point(size = 8) +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
         axis.title = element_text(size = 16),
         axis.text = element_text(size = 12),
-        axis.title.x = element_blank(),
         legend.title = element_blank(),
         legend.text = element_text(size =12)) +
-  scale_color_manual(name = '',
-                     values = c('a' = 'black',
-                                'b' = '#CC79A7',
-                                'c' = '#D55E00'),
-                     labels = c('C:P', 'N:P', 'C:N')) +
-  ylab(expression(Lake~Stoichiometry~(mol:mol))) +
-  scale_y_log10() +
-  geom_hline(yintercept = 106, color = 'black', linetype = 'dashed')+ # redfield ratios
-  geom_hline(yintercept = 16, color ='#CC79A7', linetype = 'dashed')+
-  geom_hline(yintercept = 6.6, color = '#D55E00', linetype = 'dashed')
+  xlab(expression(C:N~Load~Stoichiometry~(mol:mol))) +
+  ylab(expression(C:N~Lake~Stoichiometry~(mol:mol))) +
+  geom_abline(slope = 1, color = 'black', linetype = 'dashed') # redfield ratios
 
-windows()
-in_lake_stoich
+load_vs_lake_stoich
 
-lake_load_stoich <- ggplot(load_plot, aes(x = plot_date, y = DOC_load/TP_load, group = lake)) +
-  geom_line(aes(color = 'a'), size = 1) +
-  geom_line(data = load_plot, aes(x = plot_date, y = TN_load / TP_load, group = lake, color = 'b'), size = 1)+
-  geom_line(data = load_plot, aes(x = plot_date, y = DOC_load / TN_load, group = lake, color = 'c'), size = 1)+
-  geom_point(data = load_plot, aes(x = plot_date, y = DOC / TP, group = lake, color = 'a'), size = 1)+
-  geom_point(data = load_plot, aes(x = plot_date, y = TN / TP, group = lake, color = 'b'), size = 1)+
-  geom_point(data = load_plot, aes(x = plot_date, y = DOC / TN, group = lake, color = 'c'), size = 1)+
-  facet_wrap(~lake, labeller = as_labeller(lake_names), strip.position = 'top') +
+load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_n_p_load, y = mean_n_p, group = lake)) +
+  geom_point(size = 8) +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
         axis.title = element_text(size = 16),
         axis.text = element_text(size = 12),
-        axis.title.x = element_blank(),
         legend.title = element_blank(),
         legend.text = element_text(size =12)) +
-  scale_color_manual(name = '',
-                     values = c('a' = 'black',
-                                'b' = '#CC79A7',
-                                'c' = '#D55E00'),
-                     labels = c('C:P', 'N:P', 'C:N')) +
-  ylab(expression(Load~or~Lake~Stoichiometry~(mol:mol))) +
-  scale_y_log10() +
-  geom_hline(yintercept = 106, color = 'black', linetype = 'dashed')+ # redfield ratios
-  geom_hline(yintercept = 16, color ='#CC79A7', linetype = 'dashed')+
-  geom_hline(yintercept = 6.6, color = '#D55E00', linetype = 'dashed')
+  xlab(expression(N:P~Load~Stoichiometry~(mol:mol))) +
+  ylab(expression(N:P~Lake~Stoichiometry~(mol:mol))) +
+  geom_abline(slope = 1, color = 'black', linetype = 'dashed') # redfield ratios
 
-lake_load_stoich
-
-ggsave('figures/fig_load_stoich_timeseries.png', plot = load_stoich, width = 10, height = 10)
-ggsave('figures/fig_lake_stoich_timeseries.png', plot = in_lake_stoich, width = 10, height = 10)
-ggsave('figures/fig_lake_load_stoich_timeseries.png', plot = lake_load_stoich, width = 10, height = 10)
-
-
-ave_load = load_plot %>%
-  group_by(lake) %>%
-  summarise_all(funs(mean(., na.rm = TRUE))) %>%
-  ungroup()
-
-ggplot(ave_load, aes(x = DOC_load/TP_load, y = DOC/TP)) +
-  geom_point() +
-  theme_bw() +
-  geom_abline(slope = 1, intercept = 0)
-
-
-ggplot(ave_load, aes(x = DOC_load/TN_load, y = DOC/TN)) +
-  geom_point() +
-  theme_bw() +
-  geom_abline(slope = 1, intercept = 0)
-
-
-ggplot(ave_load, aes(x = TN_load/TP_load, y = TN/TP)) +
-  geom_point() +
-  theme_bw() +
-  geom_abline(slope = 1, intercept = 0)
-
-
-
-
-ggplot(load_plot, aes(x = plot_date, y = TN_load/TP_load, group = lake, color = lake)) +
-  geom_line(size = 2, alpha = .6) +
-  # geom_line(data = load_plot, aes(x = plot_date, y = TN_load / TP_load, group = lake, color = 'b'), size = 1)+
-  # geom_line(data = load_plot, aes(x = plot_date, y = DOC_load / TN_load, group = lake, color = 'c'), size = 1)+
-  # facet_wrap(~lake, labeller = as_labeller(lake_names), strip.position = 'top') +
-  theme_classic() +
-  theme(strip.background = element_blank(),
-        strip.placement = 'inside',
-        axis.title = element_text(size = 16),
-        axis.text = element_text(size = 12),
-        axis.title.x = element_blank(),
-        legend.title = element_blank(),
-        legend.text = element_text(size =12)) +
-  ylab(expression(N:P~Load~Stoichiometry~(mol:mol))) +
-  scale_y_log10() +
-  geom_hline(yintercept = 16, color = 'black', linetype = 'dashed') # redfield ratios
+load_vs_lake_stoich

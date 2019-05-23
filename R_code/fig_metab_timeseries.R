@@ -3,7 +3,9 @@
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(yaml)
 
+analysis_cfg <- yaml::yaml.load_file('lib/cfg/analysis_cfg.yml') # this file holds important analysis info such as CV cutoff
 dir<-'results/metab/20161107/' # directory of metabolism data
 folders<-list.files(dir) # folders in this dir
 folders<-folders[-grep('.doc',folders)] # get rid of README doc
@@ -25,9 +27,9 @@ season_cutoff <- readRDS('results/z_scored_schmidt.rds') %>%
   select(-doy)# seasonal cutoff based on z-scored schmidt stability
 all_metab <- left_join(all_metab, season_cutoff, by = c('lake' = 'lake', 'date' = 'date'))
 
-cv_cutoff = 4
-min_doy = 120
-max_doy = 300
+cv_cutoff = analysis_cfg$cv_cutoff
+min_doy = analysis_cfg$min_doy
+max_doy = analysis_cfg$max_doy
 
 metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff, R_SD/abs(R) < cv_cutoff, GPP > 0, R < 0) %>%
   dplyr::group_by(lake) %>%

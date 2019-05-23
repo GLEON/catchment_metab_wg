@@ -1,0 +1,4 @@
+cv_cutoff: 4 # see meeting minutes for discussion of cutoff; also cv_cutoff_sensativity.R
+min_doy: 0 # 165 is maximum min_doy for any given lake (East Long)
+max_doy: 365 # 255 is the minimum max_doy for any given lake (UNDERC lakes)
+
