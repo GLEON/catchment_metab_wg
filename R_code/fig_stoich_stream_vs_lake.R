@@ -158,7 +158,9 @@ load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_p_load, y = mean_c_p, gr
         legend.text = element_text(size =12)) +
   xlab(expression(C:P~Load~Stoichiometry~(mol:mol))) +
   ylab(expression(C:P~Lake~Stoichiometry~(mol:mol))) +
-  geom_abline(slope = 1, color = 'black', linetype = 'dashed') # redfield ratios
+  geom_abline(slope = 1, color = 'black', linetype = 'dashed')
+
+summary(lm(load_plot$mean_c_p~load_plot$mean_c_p_load))
 
 load_vs_lake_stoich
 
@@ -174,6 +176,7 @@ load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_n_load, y = mean_c_n, gr
   xlab(expression(C:N~Load~Stoichiometry~(mol:mol))) +
   ylab(expression(C:N~Lake~Stoichiometry~(mol:mol))) +
   geom_abline(slope = 1, color = 'black', linetype = 'dashed') # redfield ratios
+summary(lm(load_plot$mean_c_n~load_plot$mean_c_n_load))
 
 load_vs_lake_stoich
 
@@ -189,5 +192,6 @@ load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_n_p_load, y = mean_n_p, gr
   xlab(expression(N:P~Load~Stoichiometry~(mol:mol))) +
   ylab(expression(N:P~Lake~Stoichiometry~(mol:mol))) +
   geom_abline(slope = 1, color = 'black', linetype = 'dashed') # redfield ratios
+summary(lm(load_plot$mean_n_p~load_plot$mean_n_p_load))
 
 load_vs_lake_stoich
