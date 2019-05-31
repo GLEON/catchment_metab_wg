@@ -156,6 +156,39 @@ load_plot_annual <- dplyr::filter(all_load, doy > min_doy, doy < max_doy) %>%
 plot_data <- left_join(load_plot, metab_plot, by = c('lake', 'season'))
 plot_data_annual <- left_join(load_plot_annual, metab_plot_annual, by = c('lake'))
 
+# testing for normality
+# metab
+shapiro.test(plot_data_annual$mean_gpp)
+shapiro.test(plot_data_annual$mean_r)
+shapiro.test(plot_data_annual$mean_nep)
+
+shapiro.test(log10(plot_data_annual$mean_gpp))
+shapiro.test(log10(plot_data_annual$mean_r * -1))
+shapiro.test(log10(plot_data_annual$mean_nep + 1))
+
+# loads
+shapiro.test(plot_data_annual$mean_tp_load)
+shapiro.test(plot_data_annual$mean_tn_load)
+shapiro.test(plot_data_annual$mean_doc_load)
+
+shapiro.test(log10(plot_data_annual$mean_tp_load))
+shapiro.test(log10(plot_data_annual$mean_tn_load))
+shapiro.test(log10(plot_data_annual$mean_doc_load))
+
+# stoich
+shapiro.test(plot_data_annual$mean_doc_tp_load)
+shapiro.test(plot_data_annual$mean_doc_tn_load)
+shapiro.test(plot_data_annual$mean_tn_tp_load)
+
+# transformations for normality
+plot_data_annual <- plot_data_annual %>%
+  mutate(mean_gpp = log10(mean_gpp),
+         mean_r = log10(mean_r * -1),
+         mean_nep = log10(mean_nep + 1),
+         mean_tp_load = log10(mean_tp_load),
+         mean_tn_load = log10(mean_tn_load),
+         mean_doc_load = log10(mean_doc_load))
+
 
 ## multi model selection based on AIC
 
@@ -182,8 +215,7 @@ for(i in seasons){
     # ER
     r_data = plot_data_annual %>%
       select(rbind('mean_r',predictors)) %>%
-      na.omit() %>%
-      mutate(mean_r = mean_r * -1)
+      na.omit()
 
     global_model_r = lm(mean_r ~ ., data = r_data)
 
@@ -223,8 +255,7 @@ for(i in seasons){
     r_data = plot_data %>%
       dplyr::filter(season == i) %>%
       select(rbind('mean_r',predictors)) %>%
-      na.omit() %>%
-      mutate(mean_r = mean_r * -1)
+      na.omit()
 
     global_model_r = lm(mean_r ~ ., data = r_data)
 
