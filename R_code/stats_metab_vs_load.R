@@ -6,6 +6,7 @@ library(ggplot2)
 library(yaml)
 library(MuMIn)
 library(kableExtra)
+library(rcompanion)
 
 analysis_cfg <- yaml::yaml.load_file('lib/cfg/analysis_cfg.yml') # this file holds important analysis info such as CV cutoff
 ### loading in metabolism data for sorting by mean GPP ###
@@ -156,15 +157,21 @@ load_plot_annual <- dplyr::filter(all_load, doy > min_doy, doy < max_doy) %>%
 plot_data <- left_join(load_plot, metab_plot, by = c('lake', 'season'))
 plot_data_annual <- left_join(load_plot_annual, metab_plot_annual, by = c('lake'))
 
+# getting rid of lakes w/o stream inflows
+plot_data_annual <- plot_data_annual %>%
+  dplyr::filter(!is.na(mean_tp_load))
+
 # testing for normality
 # metab
 shapiro.test(plot_data_annual$mean_gpp)
-shapiro.test(plot_data_annual$mean_r)
+shapiro.test(plot_data_annual$mean_r * -1) # r is normal
 shapiro.test(plot_data_annual$mean_nep)
 
 shapiro.test(log10(plot_data_annual$mean_gpp))
-shapiro.test(log10(plot_data_annual$mean_r * -1))
+# shapiro.test(sqrt(plot_data_annual$mean_r * -1))
 shapiro.test(log10(plot_data_annual$mean_nep + 1))
+shapiro.test(sqrt(plot_data_annual$mean_nep + 1))
+rcompanion::transformTukey(plot_data_annual$mean_nep + 1) # using this one for trnaformation to make normal
 
 # loads
 shapiro.test(plot_data_annual$mean_tp_load)
@@ -180,14 +187,25 @@ shapiro.test(plot_data_annual$mean_doc_tp_load)
 shapiro.test(plot_data_annual$mean_doc_tn_load)
 shapiro.test(plot_data_annual$mean_tn_tp_load)
 
+shapiro.test(log10(plot_data_annual$mean_doc_tp_load))
+shapiro.test(log10(plot_data_annual$mean_doc_tn_load))
+shapiro.test(log10(plot_data_annual$mean_tn_tp_load))
+
+shapiro.test(sqrt(plot_data_annual$mean_doc_tp_load))
+shapiro.test(sqrt(plot_data_annual$mean_doc_tn_load))
+shapiro.test(sqrt(plot_data_annual$mean_tn_tp_load))
+
 # transformations for normality
 plot_data_annual <- plot_data_annual %>%
   mutate(mean_gpp = log10(mean_gpp),
-         mean_r = log10(mean_r * -1),
-         mean_nep = log10(mean_nep + 1),
+         mean_r = sqrt(mean_r * -1), # no transformation needed for R (other than making positive)
+         mean_nep = rcompanion::transformTukey(mean_nep + 1),
          mean_tp_load = log10(mean_tp_load),
          mean_tn_load = log10(mean_tn_load),
-         mean_doc_load = log10(mean_doc_load))
+         mean_doc_load = log10(mean_doc_load),
+         mean_doc_tp_load = sqrt(mean_doc_tp_load),
+         mean_doc_tn_load = sqrt(mean_doc_tn_load),
+         mean_tn_tp_load = sqrt(mean_tn_tp_load))
 
 
 ## multi model selection based on AIC
@@ -195,7 +213,7 @@ plot_data_annual <- plot_data_annual %>%
 gpp_out = tibble()
 r_out = tibble()
 nep_out = tibble()
-seasons = c('spring', 'summer', 'fall', 'annual')
+seasons = c('annual')
 for(i in seasons){
   if(i == 'annual'){
     # GPP
@@ -282,12 +300,12 @@ for(i in seasons){
 all_out = bind_rows(gpp_out, r_out, nep_out) %>%
   mutate(metab_response = c(rep('gpp',nrow(gpp_out)), rep('r', nrow(r_out)), rep('nep', nrow(nep_out))))
 
-saveRDS(all_out, 'results/AIC_models/metab_aic.rds')
+saveRDS(all_out, 'results/AIC_models/metab_aic_transformed_variables.rds')
 
 all_out %>%
   kable() %>%
   kable_styling(bootstrap_options = "striped", full_width = F) %>%
-  save_kable(file = 'results/AIC_models/metab_aic_table.html', self_contained = T)
+  save_kable(file = 'results/AIC_models/metab_aic_transformed_variables_table.html', self_contained = T)
 
 ###########################################################
 
