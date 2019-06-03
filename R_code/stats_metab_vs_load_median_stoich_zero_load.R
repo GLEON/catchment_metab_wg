@@ -1,4 +1,6 @@
 # statistics for predictors of lake metabolism
+#
+# retaining lakes w/o stream loads by setting load to zero and stoichiometry to median of stoichiometry for other lakes
 
 library(dplyr)
 library(cowplot)
@@ -6,7 +8,6 @@ library(ggplot2)
 library(yaml)
 library(MuMIn)
 library(kableExtra)
-library(rcompanion)
 
 analysis_cfg <- yaml::yaml.load_file('lib/cfg/analysis_cfg.yml') # this file holds important analysis info such as CV cutoff
 ### loading in metabolism data for sorting by mean GPP ###
@@ -108,6 +109,7 @@ in_lake_nutrients = in_lake_nutrients %>%
 
 all_load = left_join(all_load, in_lake_nutrients, by = c('lake' = 'lake', 'date' = 'date'))
 
+
 # Units for nutrient load files = kg/day for TP, TN, DOC and m3/s for inflow
 all_load <- all_load %>%
   mutate(ave_tp_conc_load_mol_m3 = TP_load / 31 * 1000 / (inflow * 86400),
@@ -157,55 +159,48 @@ load_plot_annual <- dplyr::filter(all_load, doy > min_doy, doy < max_doy) %>%
 plot_data <- left_join(load_plot, metab_plot, by = c('lake', 'season'))
 plot_data_annual <- left_join(load_plot_annual, metab_plot_annual, by = c('lake'))
 
-# getting rid of lakes w/o stream inflows
+# For those lakes w/o stream inputs, setting load to zero and stoichiometry to median of stoichiometry for other lakes
 plot_data_annual <- plot_data_annual %>%
-  dplyr::filter(!is.na(mean_tp_load))
+  mutate(mean_tp_load = ifelse(is.na(mean_tp_load), 0, mean_tp_load),
+         mean_tn_load = ifelse(is.na(mean_tn_load), 0, mean_tn_load),
+         mean_doc_load = ifelse(is.na(mean_doc_load), 0, mean_doc_load),
+         mean_doc_tp_load = ifelse(is.na(mean_doc_tp_load), median(plot_data_annual$mean_doc_tp_load, na.rm = T), mean_doc_tp_load),
+         mean_doc_tn_load = ifelse(is.na(mean_doc_tn_load), median(plot_data_annual$mean_doc_tn_load, na.rm = T), mean_doc_tn_load),
+         mean_tn_tp_load = ifelse(is.na(mean_tn_tp_load), median(plot_data_annual$mean_tn_tp_load, na.rm = T), mean_tn_tp_load))
 
 # testing for normality
 # metab
 shapiro.test(plot_data_annual$mean_gpp)
-shapiro.test(plot_data_annual$mean_r * -1) # r is normal
+shapiro.test(plot_data_annual$mean_r)
 shapiro.test(plot_data_annual$mean_nep)
 
 shapiro.test(log10(plot_data_annual$mean_gpp))
-# shapiro.test(sqrt(plot_data_annual$mean_r * -1))
+shapiro.test(log10(plot_data_annual$mean_r * -1))
 shapiro.test(log10(plot_data_annual$mean_nep + 1))
-shapiro.test(sqrt(plot_data_annual$mean_nep + 1))
-rcompanion::transformTukey(plot_data_annual$mean_nep + 1) # using this one for trnaformation to make normal
 
 # loads
 shapiro.test(plot_data_annual$mean_tp_load)
 shapiro.test(plot_data_annual$mean_tn_load)
 shapiro.test(plot_data_annual$mean_doc_load)
 
-shapiro.test(log10(plot_data_annual$mean_tp_load))
-shapiro.test(log10(plot_data_annual$mean_tn_load))
-shapiro.test(log10(plot_data_annual$mean_doc_load))
+shapiro.test(log10(plot_data_annual$mean_tp_load + 1e-10))
+shapiro.test(log10(plot_data_annual$mean_tn_load + 1e-7))
+shapiro.test(log10(plot_data_annual$mean_doc_load + 1e-7))
 
 # stoich
 shapiro.test(plot_data_annual$mean_doc_tp_load)
 shapiro.test(plot_data_annual$mean_doc_tn_load)
 shapiro.test(plot_data_annual$mean_tn_tp_load)
 
-shapiro.test(log10(plot_data_annual$mean_doc_tp_load))
-shapiro.test(log10(plot_data_annual$mean_doc_tn_load))
-shapiro.test(log10(plot_data_annual$mean_tn_tp_load))
-
-shapiro.test(sqrt(plot_data_annual$mean_doc_tp_load))
-shapiro.test(sqrt(plot_data_annual$mean_doc_tn_load))
-shapiro.test(sqrt(plot_data_annual$mean_tn_tp_load))
-
 # transformations for normality
 plot_data_annual <- plot_data_annual %>%
   mutate(mean_gpp = log10(mean_gpp),
-         mean_r = sqrt(mean_r * -1), # no transformation needed for R (other than making positive)
-         mean_nep = rcompanion::transformTukey(mean_nep + 1),
-         mean_tp_load = log10(mean_tp_load),
-         mean_tn_load = log10(mean_tn_load),
-         mean_doc_load = log10(mean_doc_load),
-         mean_doc_tp_load = sqrt(mean_doc_tp_load),
-         mean_doc_tn_load = sqrt(mean_doc_tn_load),
-         mean_tn_tp_load = sqrt(mean_tn_tp_load))
+         mean_r = log10(mean_r * -1),
+         mean_nep = log10(mean_nep + 1),
+         mean_tp_load = log10(mean_tp_load + 1e-10),
+         mean_tn_load = log10(mean_tn_load + 1e-7),
+         mean_doc_load = log10(mean_doc_load + 1e-7))
+
 
 
 ## multi model selection based on AIC
@@ -213,7 +208,7 @@ plot_data_annual <- plot_data_annual %>%
 gpp_out = tibble()
 r_out = tibble()
 nep_out = tibble()
-seasons = c('annual')
+seasons = c('spring', 'summer', 'fall', 'annual')
 for(i in seasons){
   if(i == 'annual'){
     # GPP
@@ -233,7 +228,8 @@ for(i in seasons){
     # ER
     r_data = plot_data_annual %>%
       select(rbind('mean_r',predictors)) %>%
-      na.omit()
+      na.omit() %>%
+      mutate(mean_r = mean_r * -1)
 
     global_model_r = lm(mean_r ~ ., data = r_data)
 
@@ -273,7 +269,8 @@ for(i in seasons){
     r_data = plot_data %>%
       dplyr::filter(season == i) %>%
       select(rbind('mean_r',predictors)) %>%
-      na.omit()
+      na.omit() %>%
+      mutate(mean_r = mean_r * -1)
 
     global_model_r = lm(mean_r ~ ., data = r_data)
 
@@ -300,23 +297,11 @@ for(i in seasons){
 all_out = bind_rows(gpp_out, r_out, nep_out) %>%
   mutate(metab_response = c(rep('gpp',nrow(gpp_out)), rep('r', nrow(r_out)), rep('nep', nrow(nep_out))))
 
-saveRDS(all_out, 'results/AIC_models/metab_aic_transformed_variables.rds')
+saveRDS(all_out, 'results/AIC_models/metab_median_stoich_zero_load_aic.rds')
 
 all_out %>%
   kable() %>%
   kable_styling(bootstrap_options = "striped", full_width = F) %>%
-  save_kable(file = 'results/AIC_models/metab_aic_transformed_variables_table.html', self_contained = T)
-
-###########################################################
-
-
-# false discovery rate control
-# gpp_fdr = as_tibble(gpp_corr_matrix$P) %>%
-#   select(mean_gpp) %>%
-#   mutate(predictor = rownames(gpp_corr_matrix$P)) %>%
-#   rename(pval = mean_gpp) %>%
-#   na.omit()
-#
-# fdrtool(gpp_fdr$pval, statistic = 'pvalue')
+  save_kable(file = 'results/AIC_models/metab_median_stoich_zero_load_aic_table.html', self_contained = T)
 
 
