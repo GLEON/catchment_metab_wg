@@ -69,9 +69,13 @@ lake_names <- c('Acton' = 'Acton Lake',
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7") # colorblind-friendly pallete
 
 # keeping x and y axis scales the same for every plot
-metab <- ggplot(metab_plot, aes(x = plot_date, y = GPP, group = lake ,color = season)) +
-  geom_line(size =1) +
-  geom_line(data = metab_plot, aes( x= plot_date, y = R, group = lake), size = 1) +
+linesize = .5
+pointsize = .8
+metab <- ggplot(dplyr::filter(metab_plot, !is.na(season)), aes(x = plot_date, y = GPP, group = lake ,color = season)) +
+  geom_line(size = linesize) +
+  geom_point(size = pointsize) +
+  geom_line(data = metab_plot, aes( x= plot_date, y = R, group = lake), size = linesize) +
+  geom_point(data = metab_plot, aes( x= plot_date, y = R, group = lake), size = pointsize) +
   facet_wrap(~lake,labeller = as_labeller(lake_names), strip.position = 'top') +
   theme_classic() +
   theme(strip.background = element_blank(),
@@ -94,7 +98,7 @@ metab <- ggplot(metab_plot, aes(x = plot_date, y = GPP, group = lake ,color = se
   ylab(expression(Metabolism~(mg~O[2]~L^-1~day^-1))) +
   geom_hline(yintercept = 0, linetype = 'dashed', color = 'grey')
 
-metab
+# metab
 
 ggsave('figures/fig_metab_timeseries.png', plot = metab, width = 10, height = 10)
 

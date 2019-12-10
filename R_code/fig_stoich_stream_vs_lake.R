@@ -30,14 +30,14 @@ cv_cutoff = analysis_cfg$cv_cutoff
 min_doy = analysis_cfg$min_doy
 max_doy = analysis_cfg$max_doy
 
-metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff) %>%
+metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff, R_SD/(R*-1) < cv_cutoff) %>%
   group_by(lake) %>%
   dplyr::mutate(mean_gpp = mean(GPP, na.rm=T)) %>%
   ungroup()
 
 dir<-'results/nutrient load/' # directory of load data
 files<-list.files(dir) # folders in this dir
-files<-files[-grep('Readme',files)] # get rid of README doc
+files<-files[-grep('README',files)] # get rid of README doc
 
 all_load<-data.frame() # data frame to store all load data
 for(i in 1:length(files)){ # loops over all files in load directory
@@ -147,8 +147,8 @@ lake_names <- c('Acton' = 'Acton Lake',
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7") # colorblind-friendly pallete
 
 # keeping x and y axis scales the same for every plot
-load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_p_load, y = mean_c_p, group = lake)) +
-  geom_point(size = 8) +
+c_p_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_p_load, y = mean_c_p, group = lake)) +
+  geom_point(size = 5) +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
@@ -164,8 +164,8 @@ summary(lm(load_plot$mean_c_p~load_plot$mean_c_p_load))
 
 load_vs_lake_stoich
 
-load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_n_load, y = mean_c_n, group = lake)) +
-  geom_point(size = 8) +
+c_n_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_n_load, y = mean_c_n, group = lake)) +
+  geom_point(size = 5) +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
@@ -180,8 +180,8 @@ summary(lm(load_plot$mean_c_n~load_plot$mean_c_n_load))
 
 load_vs_lake_stoich
 
-load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_n_p_load, y = mean_n_p, group = lake)) +
-  geom_point(size = 8) +
+n_p_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_n_p_load, y = mean_n_p, group = lake)) +
+  geom_point(size = 5) +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
@@ -195,3 +195,16 @@ load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_n_p_load, y = mean_n_p, gr
 summary(lm(load_plot$mean_n_p~load_plot$mean_n_p_load))
 
 load_vs_lake_stoich
+
+
+
+g = plot_grid(c_n_load_vs_lake_stoich, c_p_load_vs_lake_stoich, n_p_load_vs_lake_stoich,
+              labels = c('A', 'B', 'C'), align = 'hv',nrow = 2)
+
+# g
+
+ggsave('figures/fig_stoich_stream_vs_lake.png', plot = g, width = 8, height = 8)
+
+
+
+

@@ -38,7 +38,7 @@ metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP 
 #### loading in nutrient load time series ###
 dir<-'results/nutrient load/' # directory of load data
 files<-list.files(dir) # folders in this dir
-files<-files[-grep('Readme',files)] # get rid of README doc
+files<-files[-grep('README',files)] # get rid of README doc
 
 all_load<-data.frame() # data frame to store all load data
 for(i in 1:length(files)){ # loops over all files in load directory
@@ -82,7 +82,9 @@ load_plot <- dplyr::filter(all_load, doy > min_doy, doy < max_doy) %>%
   dplyr::mutate(lake = factor(lake),
          season = factor(season),
          plot_date = as.Date(paste('2001-',doy,sep=''), format = '%Y-%j', tz ='GMT'),
-         TP_load = ifelse(TP_load == 0, NA, TP_load))
+         TP_load = ifelse(TP_load == 0, NA, TP_load),
+         TN_load = ifelse(TN_load == 0, NA, TN_load),
+         DOC_load = ifelse(DOC_load == 0, NA, DOC_load))
 
 #ordering by mean inflow
 lakes_sorted <- load_plot$lake[sort.list(load_plot$mean_gpp)]

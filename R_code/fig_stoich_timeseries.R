@@ -30,14 +30,14 @@ cv_cutoff = analysis_cfg$cv_cutoff
 min_doy = analysis_cfg$min_doy
 max_doy = analysis_cfg$max_doy
 
-metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff) %>%
+metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff, R_SD/abs(R) < cv_cutoff, GPP > 0, R < 0) %>%
   group_by(lake) %>%
   dplyr::mutate(mean_gpp = mean(GPP, na.rm=T)) %>%
   ungroup()
 
 dir<-'results/nutrient load/' # directory of load data
 files<-list.files(dir) # folders in this dir
-files<-files[-grep('Readme',files)] # get rid of README doc
+files<-files[-grep('README',files)] # get rid of README doc
 
 all_load<-data.frame() # data frame to store all load data
 for(i in 1:length(files)){ # loops over all files in load directory
@@ -167,7 +167,8 @@ load_stoich <- ggplot(load_plot, aes(x = plot_date, y = DOC_load/TP_load, group 
   scale_y_log10() +
   geom_hline(yintercept = 106, color = 'black', linetype = 'dashed')+ # redfield ratios
   geom_hline(yintercept = 16, color ='#CC79A7', linetype = 'dashed')+
-  geom_hline(yintercept = 6.6, color = '#D55E00', linetype = 'dashed')
+  geom_hline(yintercept = 6.6, color = '#D55E00', linetype = 'dashed')+
+  scale_x_date(date_labels = '%b')
   # geom_hline(yintercept = 374.6, color = 'black', linetype = 'dashed')+ # maranger et al 2018 average stoich of watershed inputs for comparison
   # geom_hline(yintercept = 24.1, color ='#CC79A7', linetype = 'dashed')+
   # geom_hline(yintercept = 15.5, color = '#D55E00', linetype = 'dashed')
@@ -196,7 +197,8 @@ in_lake_stoich = ggplot(load_plot, aes(x = plot_date, y = DOC/TP, group = lake))
   scale_y_log10() +
   geom_hline(yintercept = 106, color = 'black', linetype = 'dashed')+ # redfield ratios
   geom_hline(yintercept = 16, color ='#CC79A7', linetype = 'dashed')+
-  geom_hline(yintercept = 6.6, color = '#D55E00', linetype = 'dashed')
+  geom_hline(yintercept = 6.6, color = '#D55E00', linetype = 'dashed')+
+  scale_x_date(date_labels = '%b')
 
 windows()
 in_lake_stoich
@@ -226,7 +228,8 @@ lake_load_stoich <- ggplot(load_plot, aes(x = plot_date, y = DOC_load/TP_load, g
   scale_y_log10() +
   geom_hline(yintercept = 106, color = 'black', linetype = 'dashed')+ # redfield ratios
   geom_hline(yintercept = 16, color ='#CC79A7', linetype = 'dashed')+
-  geom_hline(yintercept = 6.6, color = '#D55E00', linetype = 'dashed')
+  geom_hline(yintercept = 6.6, color = '#D55E00', linetype = 'dashed') +
+  scale_x_date(date_labels = '%b')
 
 lake_load_stoich
 

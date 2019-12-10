@@ -31,7 +31,7 @@ cv_cutoff = analysis_cfg$cv_cutoff
 min_doy = analysis_cfg$min_doy
 max_doy = analysis_cfg$max_doy
 
-metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff) %>%
+metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff, R_SD/(R*-1) < cv_cutoff) %>%
   group_by(lake) %>%
   dplyr::summarise(mean_gpp = mean(GPP, na.rm=T),
             mean_r = mean(R, na.rm =T),
@@ -41,7 +41,7 @@ metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP 
 #### loading in nutrient load time series ###
 dir<-'results/nutrient load/' # directory of load data
 files<-list.files(dir) # folders in this dir
-files<-files[-grep('Readme',files)] # get rid of README doc
+files<-files[-grep('README',files)] # get rid of README doc
 
 all_load<-data.frame() # data frame to store all load data
 for(i in 1:length(files)){ # loops over all files in load directory
@@ -146,7 +146,7 @@ doc_tp <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tp_load *
   xlab(expression(DOC~Load~(mg~m^-3~day^-1))) +
   ylab(expression(TP~Load~(mg~m^-3~day^-1)))
 
-doc_tp
+# doc_tp
 
 doc_tn <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tn_load *1000*1000, group = lake)) +
   geom_abline(slope = (16*14)/(106*12), intercept = 0, linetype = 'dashed') +
@@ -161,7 +161,7 @@ doc_tn <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tn_load *
   xlab(expression(DOC~Load~(mg~m^-3~day^-1))) +
   ylab(expression(TN~Load~(mg~m^-3~day^-1)))
 
-doc_tn
+# doc_tn
 
 tn_tp <- ggplot(plot_data, aes(x = mean_tn_load *1000*1000, y = mean_tp_load *1000*1000, group = lake)) +
   geom_abline(slope = (1*31)/(16*14), intercept = 0, linetype = 'dashed') +
@@ -176,13 +176,13 @@ tn_tp <- ggplot(plot_data, aes(x = mean_tn_load *1000*1000, y = mean_tp_load *10
   xlab(expression(TN~Load~(mg~m^-3~day^-1))) +
   ylab(expression(TP~Load~(mg~m^-3~day^-1)))
 
-tn_tp
+# tn_tp
 
 
 g = plot_grid(doc_tn, doc_tp, tn_tp,
               labels = c('A', 'B', 'C'), align = 'hv',nrow = 2)
 
-g
+# g
 
 ggsave('figures/fig_load_1_to_1.png', plot = g, width = 8, height = 8)
 
