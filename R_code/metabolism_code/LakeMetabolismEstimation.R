@@ -159,6 +159,7 @@ metab.out<-my.metab(data=ts.data,method = 'mle',wtr.name = colnames(ts.data[grep
                             irr.name = 'par',do.obs.name = 'doobs',error.type=error.type,logged=logged,
                     bootstrap=bootstrap,n.boot=n.boot,ar1.resids=ar1.resids,
                     guesses=guesses,nDaysSim=nDaysSim,optim_method=optim_method,sunrise=sunrise)
+
 metab.out.book<-metab(data=ts.data,method = 'bookkeep',wtr.name = colnames(ts.data[grep('wtr',colnames(ts.data))]),
                     irr.name = 'par',do.obs.name = 'doobs',lake.lat=lat)
 # metab.out.kalman<-metab(data=ts.data,method = 'kalman',wtr.name = colnames(ts.data[grep('wtr',colnames(ts.data))]),

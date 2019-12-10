@@ -1,4 +1,4 @@
-# modified LM function for running metabolism and returning uncertainty using hessian matrix
+# modified LM function for running metabolism and returning uncertainty
 # JAZ; 2015-06-03
 
 
