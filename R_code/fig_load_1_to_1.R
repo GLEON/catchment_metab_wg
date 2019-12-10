@@ -85,16 +85,19 @@ max_doy = analysis_cfg$max_doy
 load_plot <- dplyr::filter(all_load, doy > min_doy, doy < max_doy) %>%
   group_by(lake) %>%
   dplyr::summarise(mean_tp_load = mean(TP_load / Volume..m3., na.rm=T),
-            mean_tn_load = mean(TN_load / Volume..m3., na.rm =T),
-            mean_doc_load = mean(DOC_load / Volume..m3., na.rm=T),
-            mean_doc_tp_load = mean((DOC_load / 12) / (TP_load/31), na.rm=T),
-            mean_doc_tn_load = mean((DOC_load / 12) / (TN_load/14), na.rm=T),
-            mean_tn_tp_load = mean((TN_load / 14) / (TP_load/31), na.rm=T),
-            mean_tp_conc_load_mol_m3 = mean(ave_tp_conc_load_mol_m3, na.rm = T),
-            mean_tn_conc_load_mol_m3 = mean(ave_tn_conc_load_mol_m3, na.rm = T),
-            mean_doc_conc_load_mol_m3 = mean(ave_doc_conc_load_mol_m3, na.rm = T),
-            mean_inflow_m3 = mean((inflow * 86400), na.rm = T),
-            kD = mean(kD)) %>%
+                   sd_tp_load = sd(TP_load / Volume..m3., na.rm=T),
+                   mean_tn_load = mean(TN_load / Volume..m3., na.rm =T),
+                   sd_tn_load = sd(TN_load / Volume..m3., na.rm =T),
+                   mean_doc_load = mean(DOC_load / Volume..m3., na.rm=T),
+                   sd_doc_load = sd(DOC_load / Volume..m3., na.rm=T),
+                   mean_doc_tp_load = mean((DOC_load / 12) / (TP_load/31), na.rm=T),
+                   mean_doc_tn_load = mean((DOC_load / 12) / (TN_load/14), na.rm=T),
+                   mean_tn_tp_load = mean((TN_load / 14) / (TP_load/31), na.rm=T),
+                   mean_tp_conc_load_mol_m3 = mean(ave_tp_conc_load_mol_m3, na.rm = T),
+                   mean_tn_conc_load_mol_m3 = mean(ave_tn_conc_load_mol_m3, na.rm = T),
+                   mean_doc_conc_load_mol_m3 = mean(ave_doc_conc_load_mol_m3, na.rm = T),
+                   mean_inflow_m3 = mean((inflow * 86400), na.rm = T),
+                   kD = mean(kD)) %>%
   ungroup()
 
 plot_data <- left_join(load_plot, metab_plot, by = 'lake')
@@ -127,7 +130,12 @@ lake_names <- c('Acton' = 'Acton Lake',
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7") # colorblind-friendly pallete
 
 doc_tp <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tp_load *1000*1000, group = lake)) +
-  geom_point(size = 8, alpha = .5) +
+  geom_abline(slope = (1*31)/(106*12), intercept = 0, linetype = 'dashed') +
+  geom_point(size = 5, alpha = .5) +
+  # geom_errorbar(aes(ymin = mean_tp_load *1000*1000 - sd_tp_load*1000*1000,
+  #                    ymax = mean_tp_load *1000*1000 + sd_tp_load*1000*1000))+
+  # geom_errorbarh(aes(xmin = mean_doc_load *1000*1000 - sd_doc_load*1000*1000,
+  #                    xmax = mean_doc_load *1000*1000 + sd_doc_load*1000*1000))+
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
@@ -138,8 +146,11 @@ doc_tp <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tp_load *
   xlab(expression(DOC~Load~(mg~m^-3~day^-1))) +
   ylab(expression(TP~Load~(mg~m^-3~day^-1)))
 
+doc_tp
+
 doc_tn <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tn_load *1000*1000, group = lake)) +
-  geom_point(size = 8, alpha = .5) +
+  geom_abline(slope = (16*14)/(106*12), intercept = 0, linetype = 'dashed') +
+  geom_point(size = 5, alpha = .5) +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
@@ -150,8 +161,11 @@ doc_tn <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tn_load *
   xlab(expression(DOC~Load~(mg~m^-3~day^-1))) +
   ylab(expression(TN~Load~(mg~m^-3~day^-1)))
 
+doc_tn
+
 tn_tp <- ggplot(plot_data, aes(x = mean_tn_load *1000*1000, y = mean_tp_load *1000*1000, group = lake)) +
-  geom_point(size = 8, alpha = .5) +
+  geom_abline(slope = (1*31)/(16*14), intercept = 0, linetype = 'dashed') +
+  geom_point(size = 5, alpha = .5) +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
@@ -170,6 +184,6 @@ g = plot_grid(doc_tn, doc_tp, tn_tp,
 
 g
 
-ggsave('figures/fig_load_1_to_1.png', plot = g, width = 10, height = 10)
+ggsave('figures/fig_load_1_to_1.png', plot = g, width = 8, height = 8)
 
 

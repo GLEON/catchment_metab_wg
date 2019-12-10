@@ -34,14 +34,14 @@ cv_cutoff = analysis_cfg$cv_cutoff
 min_doy = analysis_cfg$min_doy
 max_doy = analysis_cfg$max_doy
 
-metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff) %>%
+metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff, R_SD/(R*-1) < cv_cutoff) %>%
   group_by(lake, season) %>%
   dplyr::summarise(mean_gpp = mean(GPP, na.rm=T),
             mean_r = mean(R, na.rm =T),
             mean_nep = mean(NEP, na.rm=T)) %>%
   ungroup()
 
-metab_plot_annual <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff) %>%
+metab_plot_annual <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff, R_SD/(R*-1) < cv_cutoff) %>%
   group_by(lake) %>%
   dplyr::summarise(mean_gpp = mean(GPP, na.rm=T),
                    mean_r = mean(R, na.rm =T),
@@ -161,17 +161,28 @@ plot_data_annual <- left_join(load_plot_annual, metab_plot_annual, by = c('lake'
 plot_data_annual <- plot_data_annual %>%
   dplyr::filter(!is.na(mean_tp_load))
 
+plot_data <- plot_data %>%
+  dplyr::filter(!is.na(mean_tp_load), !is.na(season))
+
 # testing for normality
 # metab
 shapiro.test(plot_data_annual$mean_gpp)
 shapiro.test(plot_data_annual$mean_r * -1) # r is normal
 shapiro.test(plot_data_annual$mean_nep)
 
+shapiro.test(plot_data$mean_gpp[plot_data$season=='summer'])
+shapiro.test(plot_data$mean_r[plot_data$season=='summer'] * -1)
+shapiro.test(plot_data$mean_nep[plot_data$season=='summer'])
+
 shapiro.test(log10(plot_data_annual$mean_gpp))
 # shapiro.test(sqrt(plot_data_annual$mean_r * -1))
 shapiro.test(log10(plot_data_annual$mean_nep + 1))
 shapiro.test(sqrt(plot_data_annual$mean_nep + 1))
 rcompanion::transformTukey(plot_data_annual$mean_nep + 1) # using this one for trnaformation to make normal
+
+shapiro.test(log10(plot_data$mean_gpp[plot_data$season=='summer']))
+shapiro.test(sqrt(plot_data$mean_r[plot_data$season=='summer'] * -1))
+rcompanion::transformTukey(plot_data$mean_nep[plot_data$season=='summer'] + 1) # using this one for trnaformation to make normal
 
 # loads
 shapiro.test(plot_data_annual$mean_tp_load)
@@ -181,6 +192,10 @@ shapiro.test(plot_data_annual$mean_doc_load)
 shapiro.test(log10(plot_data_annual$mean_tp_load))
 shapiro.test(log10(plot_data_annual$mean_tn_load))
 shapiro.test(log10(plot_data_annual$mean_doc_load))
+
+shapiro.test(log10(plot_data$mean_tp_load[plot_data$season=='summer']))
+shapiro.test(log10(plot_data$mean_tn_load[plot_data$season=='summer']))
+shapiro.test(log10(plot_data$mean_doc_load[plot_data$season=='summer']))
 
 # stoich
 shapiro.test(plot_data_annual$mean_doc_tp_load)
@@ -195,11 +210,36 @@ shapiro.test(sqrt(plot_data_annual$mean_doc_tp_load))
 shapiro.test(sqrt(plot_data_annual$mean_doc_tn_load))
 shapiro.test(sqrt(plot_data_annual$mean_tn_tp_load))
 
+shapiro.test(sqrt(plot_data$mean_doc_tp_load[plot_data$season=='summer']))
+shapiro.test(sqrt(plot_data$mean_doc_tn_load[plot_data$season=='summer']))
+shapiro.test(sqrt(plot_data$mean_tn_tp_load[plot_data$season=='summer']))
+
+# in-lake
+shapiro.test(plot_data_annual$mean_lake_doc)
+shapiro.test(plot_data_annual$mean_lake_tn)
+shapiro.test(plot_data_annual$mean_lake_tp)
+
+shapiro.test(log10(plot_data_annual$mean_lake_tn))
+shapiro.test(log10(plot_data_annual$mean_lake_tp))
+
 # transformations for normality
 plot_data_annual <- plot_data_annual %>%
   mutate(mean_gpp = log10(mean_gpp),
-         mean_r = sqrt(mean_r * -1), # no transformation needed for R (other than making positive)
-         mean_nep = rcompanion::transformTukey(mean_nep + 1),
+         mean_r = sqrt(mean_r * -1),
+         mean_tp_load = log10(mean_tp_load),
+         mean_tn_load = log10(mean_tn_load),
+         mean_doc_load = log10(mean_doc_load),
+         mean_doc_tp_load = sqrt(mean_doc_tp_load),
+         mean_doc_tn_load = sqrt(mean_doc_tn_load),
+         mean_tn_tp_load = sqrt(mean_tn_tp_load),
+         mean_lake_tn = log10(mean_lake_tn),
+         mean_lake_tp = log10(mean_lake_tp))
+
+# transformations for normality; only summer season
+plot_data <- plot_data %>%
+  dplyr::filter(season == 'summer') %>%
+  mutate(mean_gpp = log10(mean_gpp),
+         mean_r = sqrt(mean_r * -1),
          mean_tp_load = log10(mean_tp_load),
          mean_tn_load = log10(mean_tn_load),
          mean_doc_load = log10(mean_doc_load),
@@ -207,6 +247,14 @@ plot_data_annual <- plot_data_annual %>%
          mean_doc_tn_load = sqrt(mean_doc_tn_load),
          mean_tn_tp_load = sqrt(mean_tn_tp_load))
 
+# # transformations for normality
+# plot_data_annual <- plot_data_annual %>%
+#   mutate(mean_gpp = log10(mean_gpp),
+#          mean_r = sqrt(mean_r * -1), # no transformation needed for R (other than making positive)
+#          mean_nep = rcompanion::transformTukey(mean_nep + 1),
+#          mean_tp_load = log10(mean_tp_load),
+#          mean_tn_load = log10(mean_tn_load),
+#          mean_doc_load = log10(mean_doc_load))
 
 ## multi model selection based on AIC
 
@@ -219,7 +267,8 @@ for(i in seasons){
     # GPP
     options(na.action = 'na.fail')
 
-    predictors = c('mean_tp_load', 'mean_tn_load', 'mean_doc_load', 'mean_doc_tp_load', 'mean_doc_tn_load', 'mean_tn_tp_load')
+    predictors = c('mean_tp_load', 'mean_tn_load', 'mean_doc_load',
+                   'mean_doc_tp_load', 'mean_doc_tn_load', 'mean_tn_tp_load')
     gpp_data = plot_data_annual %>%
       select(rbind('mean_gpp',predictors)) %>%
       na.omit()
@@ -300,23 +349,80 @@ for(i in seasons){
 all_out = bind_rows(gpp_out, r_out, nep_out) %>%
   mutate(metab_response = c(rep('gpp',nrow(gpp_out)), rep('r', nrow(r_out)), rep('nep', nrow(nep_out))))
 
-saveRDS(all_out, 'results/AIC_models/metab_aic_transformed_variables.rds')
+# saveRDS(all_out, 'results/AIC_models/metab_aic_transformed_variables.rds')
 
 all_out %>%
   kable() %>%
   kable_styling(bootstrap_options = "striped", full_width = F) %>%
   save_kable(file = 'results/AIC_models/metab_aic_transformed_variables_table.html', self_contained = T)
 
-###########################################################
+
+# GPP model
+summary(lm(plot_data_annual$mean_gpp~plot_data_annual$mean_doc_load+plot_data_annual$mean_tn_load))
+
+plot_data_annual$gpp_preds= 10^predict(lm(plot_data_annual$mean_gpp~plot_data_annual$mean_doc_load+plot_data_annual$mean_tn_load))
+
+# gpp plot
+gpp = ggplot(plot_data_annual, aes(x = gpp_preds, y = 10^mean_gpp)) +
+  geom_point(size = 6, alpha = .5) +
+  ylab('Observed GPP') +
+  xlab('Predicted GPP') +
+  ylim(range(c(plot_data_annual$gpp_preds, 10^plot_data_annual$mean_gpp))) +
+  xlim(range(c(plot_data_annual$gpp_preds, 10^plot_data_annual$mean_gpp))) +
+  theme(axis.title = element_text(size = 18),
+        axis.text = element_text(size = 18)) +
+  geom_abline(slope = 1, intercept = 0, linetype = 'dashed', size = 1)
 
 
-# false discovery rate control
-# gpp_fdr = as_tibble(gpp_corr_matrix$P) %>%
-#   select(mean_gpp) %>%
-#   mutate(predictor = rownames(gpp_corr_matrix$P)) %>%
-#   rename(pval = mean_gpp) %>%
-#   na.omit()
-#
-# fdrtool(gpp_fdr$pval, statistic = 'pvalue')
+# R model
+summary(lm(plot_data_annual$mean_r~plot_data_annual$mean_doc_load+plot_data_annual$mean_tn_load))
+
+plot_data_annual$r_preds= predict(lm(plot_data_annual$mean_r~plot_data_annual$mean_doc_load+plot_data_annual$mean_tn_load))^2
+
+# r plot
+r = ggplot(plot_data_annual, aes(x = r_preds, y = mean_r^2)) +
+  geom_point(size = 6, alpha = .5) +
+  ylab('Observed R') +
+  xlab('Predicted R') +
+  ylim(range(c(plot_data_annual$r_preds, plot_data_annual$mean_r^2))) +
+  xlim(range(c(plot_data_annual$r_preds, plot_data_annual$mean_r^2))) +
+  theme(axis.title = element_text(size = 18),
+        axis.text = element_text(size = 18)) +
+  geom_abline(slope = 1, intercept = 0, linetype = 'dashed', size = 1)
 
 
+# NEP model
+summary(lm(plot_data_annual$mean_nep~plot_data_annual$mean_tn_tp_load))
+summary(lm(plot_data_annual$mean_nep~plot_data_annual$mean_tn_load + plot_data_annual$mean_doc_load))
+
+plot_data_annual$nep_preds= predict(lm(plot_data_annual$mean_nep~plot_data_annual$mean_tn_tp_load))
+plot_data_annual$nep_preds= predict(lm(plot_data_annual$mean_nep~plot_data_annual$mean_tn_load + plot_data_annual$mean_doc_load))
+
+
+# nep plot
+nep = ggplot(plot_data_annual, aes(x = nep_preds, y = mean_nep)) +
+  geom_point(size = 6, alpha = .5) +
+  ylab('Observed NEP') +
+  xlab('Predicted NEP') +
+  ylim(range(c(plot_data_annual$nep_preds, plot_data_annual$mean_nep))) +
+  xlim(range(c(plot_data_annual$nep_preds, plot_data_annual$mean_nep))) +
+  theme(axis.title = element_text(size = 18),
+        axis.text = element_text(size = 18)) +
+  geom_abline(slope = 1, intercept = 0, linetype = 'dashed', size = 1)
+
+nep_2 = data.frame(obs_nep = plot_data_annual$mean_nep, pred_nep = plot_data_annual$gpp_preds-plot_data_annual$r_preds)
+
+ggplot(nep_2, aes(x = pred_nep, y = obs_nep)) +
+  geom_point(size = 6, alpha = .5) +
+  ylab('Observed NEP') +
+  xlab('Predicted NEP') +
+  ylim(range(c(nep_2$pred_nep, nep_2$obs_nep))) +
+  xlim(range(c(nep_2$pred_nep, nep_2$obs_nep))) +
+  theme(axis.title = element_text(size = 18),
+        axis.text = element_text(size = 18)) +
+  geom_abline(slope = 1, intercept = 0, linetype = 'dashed', size = 1)
+
+
+plot_out = cowplot::plot_grid(gpp, r, nep, nrow = 1)
+
+ggsave(filename = 'figures/fig_obs_pred_metab.png', plot = plot_out, width = 14, height =5 )

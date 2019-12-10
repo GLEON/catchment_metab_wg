@@ -1,7 +1,5 @@
 # statistics for predictors of lake metabolism
-#
-# fitting model of metab with just loads as predictors; then taking
-#  residuals of best fitting models and seeing if stoichiometry explains residuals
+# accounting for mean depth before testing for effect of loads on metab
 
 library(dplyr)
 library(cowplot)
@@ -21,8 +19,14 @@ all_metab<-data.frame() # data frame to store all metab data
 for(i in 1:length(folders)){ # loops over all folders in metab directory
   cur<-read.table(file.path(dir,folders[i],paste(folders[i],'_metabEst.txt',sep='')),header=T,sep='\t',
                   stringsAsFactors = F) # read in lake specific metab data
+  cur_zmix <- read.table(file.path('data/mixed layer depth', paste0(folders[i], '_z_mix.txt')), header = T, sep = '\t',
+                         stringsAsFactors = F) %>%
+    mutate(doy = lubridate::yday(date))
   cur<-cur[,1:12] # getting rid of any unnecessary columns
   cur$lake<-folders[i]
+  cur <- left_join(cur, cur_zmix, by = 'doy') %>%
+    mutate(areal_gpp = GPP * 1000 / 1000 *12 /32 * z_mix_median) # g C m-2 day-1
+
   all_metab<-rbind(all_metab,cur)
 }
 
@@ -48,7 +52,8 @@ metab_plot_annual <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_
   group_by(lake) %>%
   dplyr::summarise(mean_gpp = mean(GPP, na.rm=T),
                    mean_r = mean(R, na.rm =T),
-                   mean_nep = mean(NEP, na.rm=T)) %>%
+                   mean_nep = mean(NEP, na.rm=T),
+                   mean_gpp_areal = mean(areal_gpp, na.rm = T)) %>%
   ungroup()
 
 #### loading in nutrient load time series ###
@@ -82,7 +87,7 @@ season_cutoff <- readRDS('results/z_scored_schmidt.rds') %>%
 all_load <- left_join(all_load, season_cutoff, by = c('lake' = 'lake', 'date' = 'date'))
 
 metaData <- read.csv('data/metadataLookUp.csv',stringsAsFactor=F) %>%
-  select(Lake.Name, Volume..m3., Surface.Area..m2., Catchment.Area..km2., Lake.Residence.Time..year., kD)
+  select(Lake.Name, Volume..m3., Surface.Area..m2., Catchment.Area..km2., Lake.Residence.Time..year., kD, Mean.Depth..m.)
 all_load <- left_join(all_load, metaData, by = c('lake' = 'Lake.Name'))
 
 in_lake_nutrients = read.table('data/in_lake_nutrients/GLEON_nutrient_inlake.txt', stringsAsFactors = F, header= T) %>% as_tibble() %>%
@@ -110,7 +115,6 @@ in_lake_nutrients = in_lake_nutrients %>%
                         lake == 'Trout' & TP > 0 ~ TP)) # getting rid of undetected TP for Trout
 
 all_load = left_join(all_load, in_lake_nutrients, by = c('lake' = 'lake', 'date' = 'date'))
-
 
 # Units for nutrient load files = kg/day for TP, TN, DOC and m3/s for inflow
 all_load <- all_load %>%
@@ -155,7 +159,8 @@ load_plot_annual <- dplyr::filter(all_load, doy > min_doy, doy < max_doy) %>%
                    kD = mean(kD),
                    mean_lake_tp = mean(TP, na.rm = T),
                    mean_lake_tn = mean(TN, na.rm = T),
-                   mean_lake_doc = mean(DOC, na.rm = T)) %>%
+                   mean_lake_doc = mean(DOC, na.rm = T),
+                   mean_depth = mean(Mean.Depth..m., na.rm = T)) %>%
   ungroup()
 
 plot_data <- left_join(load_plot, metab_plot, by = c('lake', 'season'))
@@ -200,109 +205,135 @@ shapiro.test(sqrt(plot_data_annual$mean_doc_tn_load))
 shapiro.test(sqrt(plot_data_annual$mean_tn_tp_load))
 
 # # transformations for normality
-# plot_data_annual <- plot_data_annual %>%
-#   mutate(mean_gpp = log10(mean_gpp),
-#          mean_r = sqrt(mean_r * -1), # no transformation needed for R (other than making positive)
-#          mean_nep = rcompanion::transformTukey(mean_nep + 1),
-#          mean_tp_load = log10(mean_tp_load),
-#          mean_tn_load = log10(mean_tn_load),
-#          mean_doc_load = log10(mean_doc_load),
-#          mean_doc_tp_load = sqrt(mean_doc_tp_load),
-#          mean_doc_tn_load = sqrt(mean_doc_tn_load),
-#          mean_tn_tp_load = sqrt(mean_tn_tp_load))
-
-# transformations for normality
 plot_data_annual <- plot_data_annual %>%
   mutate(mean_gpp = log10(mean_gpp),
          mean_r = sqrt(mean_r * -1), # no transformation needed for R (other than making positive)
          mean_nep = rcompanion::transformTukey(mean_nep + 1),
          mean_tp_load = log10(mean_tp_load),
          mean_tn_load = log10(mean_tn_load),
-         mean_doc_load = log10(mean_doc_load))
+         mean_doc_load = log10(mean_doc_load),
+         mean_doc_tp_load = sqrt(mean_doc_tp_load),
+         mean_doc_tn_load = sqrt(mean_doc_tn_load),
+         mean_tn_tp_load = sqrt(mean_tn_tp_load))
+
+# transformations for normality
+# plot_data_annual <- plot_data_annual %>%
+#   mutate(mean_gpp = log10(mean_gpp),
+#          mean_r = sqrt(mean_r * -1), # no transformation needed for R (other than making positive)
+#          mean_nep = rcompanion::transformTukey(mean_nep + 1),
+#          mean_tp_load = log10(mean_tp_load),
+#          mean_tn_load = log10(mean_tn_load),
+#          mean_doc_load = log10(mean_doc_load))
 
 ## multi model selection based on AIC
 
 gpp_out = tibble()
 r_out = tibble()
 nep_out = tibble()
+seasons = c('annual')
+for(i in seasons){
+  if(i == 'annual'){
+    # GPP
+    options(na.action = 'na.fail')
 
-# GPP
-options(na.action = 'na.fail')
+    predictors = c('mean_tp_load', 'mean_tn_load', 'mean_doc_load', 'mean_doc_tp_load', 'mean_doc_tn_load', 'mean_tn_tp_load')
+    gpp_data = plot_data_annual %>%
+      select(rbind('mean_gpp',predictors)) %>%
+      na.omit()
+    gpp_corr_matrix = gpp_data %>% as.matrix() %>% Hmisc::rcorr()
 
-predictors = c('mean_tp_load', 'mean_tn_load', 'mean_doc_load')
-gpp_data = plot_data_annual %>%
-  select(rbind('mean_gpp',predictors)) %>%
-  na.omit()
-gpp_corr_matrix = gpp_data %>% as.matrix() %>% Hmisc::rcorr()
+    global_model_gpp = lm(mean_gpp ~ ., data = gpp_data)
 
-global_model_gpp = lm(mean_gpp ~ ., data = gpp_data)
+    all_gpp_mods = dredge(global_model_gpp) %>% dplyr::filter(delta <= 2) %>% as_tibble()
+    all_gpp_mods = mutate(all_gpp_mods, season = i, lakes = nrow(gpp_data))
 
-all_gpp_mods = dredge(global_model_gpp) %>% dplyr::filter(delta <= 2) %>% as_tibble()
-all_gpp_mods = mutate(all_gpp_mods, season = 'annual', lakes = nrow(gpp_data))
+    # ER
+    r_data = plot_data_annual %>%
+      select(rbind('mean_r',predictors)) %>%
+      na.omit()
 
-# ER
-r_data = plot_data_annual %>%
-  select(rbind('mean_r',predictors)) %>%
-  na.omit()
+    global_model_r = lm(mean_r ~ ., data = r_data)
 
-global_model_r = lm(mean_r ~ ., data = r_data)
+    all_r_mods = dredge(global_model_r) %>% dplyr::filter(delta <= 2) %>% as_tibble()
+    all_r_mods = mutate(all_r_mods, season = i, lakes = nrow(r_data))
 
-all_r_mods = dredge(global_model_r) %>% dplyr::filter(delta <= 2) %>% as_tibble()
-all_r_mods = mutate(all_r_mods, season = 'annual', lakes = nrow(r_data))
+    # NEP
+    nep_data = plot_data_annual %>%
+      select(rbind('mean_nep',predictors)) %>%
+      na.omit()
 
-# NEP
-nep_data = plot_data_annual %>%
-  select(rbind('mean_nep',predictors)) %>%
-  na.omit()
+    global_model_nep = lm(mean_nep ~ ., data = nep_data)
 
-global_model_nep = lm(mean_nep ~ ., data = nep_data)
+    all_nep_mods = dredge(global_model_nep) %>% dplyr::filter(delta <= 2) %>% as_tibble()
+    all_nep_mods = mutate(all_nep_mods, season = i, lakes = nrow(nep_data))
 
-all_nep_mods = dredge(global_model_nep) %>% dplyr::filter(delta <= 2) %>% as_tibble()
-all_nep_mods = mutate(all_nep_mods, season = 'annual', lakes = nrow(nep_data))
+    gpp_out = bind_rows(gpp_out, all_gpp_mods)
+    r_out = bind_rows(r_out, all_r_mods)
+    nep_out = bind_rows(nep_out, all_nep_mods)
+  }else{
+    # GPP
+    options(na.action = 'na.fail')
 
-gpp_out = bind_rows(gpp_out, all_gpp_mods)
-r_out = bind_rows(r_out, all_r_mods)
-nep_out = bind_rows(nep_out, all_nep_mods)
+    predictors = c('mean_tp_load', 'mean_tn_load', 'mean_doc_load', 'mean_doc_tp_load', 'mean_doc_tn_load', 'mean_tn_tp_load')
+    gpp_data = plot_data %>%
+      dplyr::filter(season == i) %>%
+      select(rbind('mean_gpp',predictors)) %>%
+      na.omit()
+    gpp_corr_matrix = gpp_data %>% as.matrix() %>% Hmisc::rcorr()
 
+    global_model_gpp = lm(mean_gpp ~ ., data = gpp_data)
+
+    all_gpp_mods = dredge(global_model_gpp) %>% dplyr::filter(delta <= 2) %>% as_tibble()
+    all_gpp_mods = mutate(all_gpp_mods, season = i, lakes = nrow(gpp_data))
+
+    # ER
+    r_data = plot_data %>%
+      dplyr::filter(season == i) %>%
+      select(rbind('mean_r',predictors)) %>%
+      na.omit()
+
+    global_model_r = lm(mean_r ~ ., data = r_data)
+
+    all_r_mods = dredge(global_model_r) %>% dplyr::filter(delta <= 2) %>% as_tibble()
+    all_r_mods = mutate(all_r_mods, season = i, lakes = nrow(r_data))
+
+    # NEP
+    nep_data = plot_data %>%
+      dplyr::filter(season == i) %>%
+      select(rbind('mean_nep',predictors)) %>%
+      na.omit()
+
+    global_model_nep = lm(mean_nep ~ ., data = nep_data)
+
+    all_nep_mods = dredge(global_model_nep) %>% dplyr::filter(delta <= 2) %>% as_tibble()
+    all_nep_mods = mutate(all_nep_mods, season = i, lakes = nrow(nep_data))
+
+    gpp_out = bind_rows(gpp_out, all_gpp_mods)
+    r_out = bind_rows(r_out, all_r_mods)
+    nep_out = bind_rows(nep_out, all_nep_mods)
+  }
+}
 
 all_out = bind_rows(gpp_out, r_out, nep_out) %>%
   mutate(metab_response = c(rep('gpp',nrow(gpp_out)), rep('r', nrow(r_out)), rep('nep', nrow(nep_out))))
 
-saveRDS(all_out, 'results/AIC_models/metab_aic_transformed_variables_load_only.rds')
+saveRDS(all_out, 'results/AIC_models/metab_aic_transformed_variables.rds')
 
 all_out %>%
   kable() %>%
   kable_styling(bootstrap_options = "striped", full_width = F) %>%
-  save_kable(file = 'results/AIC_models/metab_aic_transformed_variables_load_only_table.html', self_contained = T)
+  save_kable(file = 'results/AIC_models/metab_aic_transformed_variables_table.html', self_contained = T)
 
-best_gpp_preds = all_out %>%
-  dplyr::filter(metab_response == 'gpp', delta == 0) %>%
-  select(which(!is.na(.))) %>% select(starts_with('mean')) %>% colnames()
-best_r_preds = all_out %>%
-  dplyr::filter(metab_response == 'r', delta == 0)%>%
-  select(which(!is.na(.))) %>% select(starts_with('mean')) %>% colnames()
-best_nep_preds = all_out %>%
-  dplyr::filter(metab_response == 'nep', delta == 0)%>%
-  select(which(!is.na(.))) %>% select(starts_with('mean')) %>% colnames()
+###########################################################
 
-gpp_resid = tibble(gpp_resid = summary(lm(mean_gpp ~ mean_doc_load + mean_tn_load , data = gpp_data))$resid)
-r_resid = tibble(r_resid = summary(lm(mean_r ~ mean_doc_load + mean_tn_load , data = r_data))$resid)
-nep_resid = tibble(nep_resid = summary(lm(mean_nep ~ 1, data = nep_data))$resid)
 
-predictors = c('mean_doc_tp_load', 'mean_doc_tn_load', 'mean_tn_tp_load')
-gpp_data_stoich = plot_data_annual %>%
-  select(predictors) %>% bind_cols(gpp_resid) %>%
-  na.omit()
+# false discovery rate control
+# gpp_fdr = as_tibble(gpp_corr_matrix$P) %>%
+#   select(mean_gpp) %>%
+#   mutate(predictor = rownames(gpp_corr_matrix$P)) %>%
+#   rename(pval = mean_gpp) %>%
+#   na.omit()
+#
+# fdrtool(gpp_fdr$pval, statistic = 'pvalue')
 
-r_data_stoich = plot_data_annual %>%
-  select(predictors) %>% bind_cols(r_resid) %>%
-  na.omit()
-
-nep_data_stoich = plot_data_annual %>%
-  select(predictors) %>% bind_cols(nep_resid) %>%
-  na.omit()
-
-summary(lm(gpp_resid ~ mean_doc_tp_load + mean_doc_tn_load + mean_tn_tp_load, data = gpp_data_stoich))
-summary(lm(r_resid ~ mean_doc_tp_load + mean_doc_tn_load + mean_tn_tp_load, data = r_data_stoich))
-summary(lm(nep_resid ~ mean_doc_tp_load + mean_doc_tn_load + mean_tn_tp_load, data = nep_data_stoich))
 
