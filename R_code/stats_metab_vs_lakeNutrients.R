@@ -37,8 +37,8 @@ max_doy = analysis_cfg$max_doy
 metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff, R_SD/(R*-1) < cv_cutoff) %>%
   group_by(lake, season) %>%
   dplyr::summarise(mean_gpp = mean(GPP, na.rm=T),
-                   mean_r = mean(R, na.rm =T),
-                   mean_nep = mean(NEP, na.rm=T)) %>%
+            mean_r = mean(R, na.rm =T),
+            mean_nep = mean(NEP, na.rm=T)) %>%
   ungroup()
 
 metab_plot_annual <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff, R_SD/(R*-1) < cv_cutoff) %>%
@@ -121,19 +121,19 @@ max_doy = analysis_cfg$max_doy
 load_plot <- dplyr::filter(all_load, doy > min_doy, doy < max_doy) %>%
   group_by(lake, season) %>%
   dplyr::summarise(mean_tp_load = mean(TP_load / Volume..m3., na.rm=T),
-                   mean_tn_load = mean(TN_load / Volume..m3., na.rm =T),
-                   mean_doc_load = mean(DOC_load / Volume..m3., na.rm=T),
-                   mean_doc_tp_load = mean((DOC_load / 12) / (TP_load/31), na.rm=T),
-                   mean_doc_tn_load = mean((DOC_load / 12) / (TN_load/14), na.rm=T),
-                   mean_tn_tp_load = mean((TN_load / 14) / (TP_load/31), na.rm=T),
-                   mean_tp_conc_load_mol_m3 = mean(ave_tp_conc_load_mol_m3, na.rm = T),
-                   mean_tn_conc_load_mol_m3 = mean(ave_tn_conc_load_mol_m3, na.rm = T),
-                   mean_doc_conc_load_mol_m3 = mean(ave_doc_conc_load_mol_m3, na.rm = T),
-                   mean_inflow_m3 = mean((inflow * 86400), na.rm = T),
-                   kD = mean(kD),
-                   mean_lake_tp = mean(TP, na.rm = T),
-                   mean_lake_tn = mean(TN, na.rm = T),
-                   mean_lake_doc = mean(DOC, na.rm = T)) %>%
+            mean_tn_load = mean(TN_load / Volume..m3., na.rm =T),
+            mean_doc_load = mean(DOC_load / Volume..m3., na.rm=T),
+            mean_doc_tp_load = mean((DOC_load / 12) / (TP_load/31), na.rm=T),
+            mean_doc_tn_load = mean((DOC_load / 12) / (TN_load/14), na.rm=T),
+            mean_tn_tp_load = mean((TN_load / 14) / (TP_load/31), na.rm=T),
+            mean_tp_conc_load_mol_m3 = mean(ave_tp_conc_load_mol_m3, na.rm = T),
+            mean_tn_conc_load_mol_m3 = mean(ave_tn_conc_load_mol_m3, na.rm = T),
+            mean_doc_conc_load_mol_m3 = mean(ave_doc_conc_load_mol_m3, na.rm = T),
+            mean_inflow_m3 = mean((inflow * 86400), na.rm = T),
+            kD = mean(kD),
+            mean_lake_tp = mean(TP, na.rm = T),
+            mean_lake_tn = mean(TN, na.rm = T),
+            mean_lake_doc = mean(DOC, na.rm = T)) %>%
   ungroup()
 
 load_plot_annual <- dplyr::filter(all_load, doy > min_doy, doy < max_doy) %>%
@@ -161,15 +161,15 @@ plot_data <- left_join(load_plot, metab_plot, by = c('lake', 'season'))
 plot_data_annual <- left_join(load_plot_annual, metab_plot_annual, by = c('lake'))
 
 # getting rid of lakes w/o stream inflows
-plot_data_annual <- plot_data_annual %>%
-  dplyr::filter(!is.na(mean_tp_load))
-
-plot_data <- plot_data %>%
-  dplyr::filter(!is.na(mean_tp_load), !is.na(season))
+# plot_data_annual <- plot_data_annual %>%
+#   dplyr::filter(!is.na(mean_tp_load))
+#
+# plot_data <- plot_data %>%
+#   dplyr::filter(!is.na(mean_tp_load), !is.na(season))
 
 # getting rid of lakes w/o in-lake nutrients
-# plot_data_annual <- plot_data_annual %>%
-#   dplyr::filter(!is.na(mean_lake_doc), !is.na(mean_lake_tn), !is.na(mean_lake_tp))
+plot_data_annual <- plot_data_annual %>%
+  dplyr::filter(!is.na(mean_lake_doc), !is.na(mean_lake_tn), !is.na(mean_lake_tp))
 
 
 # testing for normality
@@ -277,8 +277,8 @@ for(i in seasons){
     # GPP
     options(na.action = 'na.fail')
 
-    predictors = c('mean_doc_load', 'mean_tn_load', 'mean_tp_load',
-                   'mean_doc_tp_load', 'mean_doc_tn_load', 'mean_tn_tp_load')
+    predictors = c('mean_lake_doc', 'mean_lake_tp', 'mean_lake_tn',
+                   'mean_lake_doc_tp', 'mean_lake_doc_tn', 'mean_lake_tn_tp')
     gpp_data = plot_data_annual %>%
       select(rbind('mean_gpp',predictors)) %>%
       na.omit()
@@ -316,8 +316,8 @@ for(i in seasons){
     # GPP
     options(na.action = 'na.fail')
 
-    predictors = c('mean_doc_load', 'mean_tn_load', 'mean_tp_load',
-                   'mean_doc_tp_load', 'mean_doc_tn_load', 'mean_tn_tp_load')
+    predictors = c('mean_lake_doc', 'mean_lake_tp', 'mean_lake_tn',
+                   'mean_lake_doc_tp', 'mean_lake_doc_tn', 'mean_lake_tn_tp')
     gpp_data = plot_data %>%
       dplyr::filter(season == i) %>%
       select(rbind('mean_gpp',predictors)) %>%
@@ -360,7 +360,7 @@ for(i in seasons){
 all_out = bind_rows(gpp_out, r_out, nep_out) %>%
   mutate(metab_response = c(rep('gpp',nrow(gpp_out)), rep('r', nrow(r_out)), rep('nep', nrow(nep_out))))
 
-saveRDS(all_out, 'results/AIC_models/metab_load_aic_transformed_variables.rds')
+saveRDS(all_out, 'results/AIC_models/metab_lake_aic_transformed_variables.rds')
 
 # all_out %>%
 #   kable() %>%
@@ -369,11 +369,11 @@ saveRDS(all_out, 'results/AIC_models/metab_load_aic_transformed_variables.rds')
 
 
 # GPP model
-summary(lm(plot_data_annual$mean_gpp~plot_data_annual$mean_doc_load+
-             plot_data_annual$mean_tn_load))
+summary(lm(plot_data_annual$mean_gpp~plot_data_annual$mean_lake_doc+
+             plot_data_annual$mean_lake_tp+plot_data_annual$mean_lake_doc_tp))
 
-plot_data_annual$gpp_preds= 10^predict(lm(plot_data_annual$mean_gpp~plot_data_annual$mean_doc_load+
-                                            plot_data_annual$mean_tn_load))
+plot_data_annual$gpp_preds= 10^predict(lm(plot_data_annual$mean_gpp~plot_data_annual$mean_lake_doc+
+                                            plot_data_annual$mean_lake_tp+plot_data_annual$mean_lake_doc_tp))
 
 # gpp plot
 gpp = ggplot(plot_data_annual, aes(x = gpp_preds, y = 10^mean_gpp)) +
@@ -392,11 +392,11 @@ gpp = ggplot(plot_data_annual, aes(x = gpp_preds, y = 10^mean_gpp)) +
 gpp
 
 # R model
-summary(lm(plot_data_annual$mean_r~plot_data_annual$mean_doc_load+
-             plot_data_annual$mean_tn_load))
+summary(lm(plot_data_annual$mean_r~plot_data_annual$mean_lake_doc+
+             plot_data_annual$mean_lake_tp+plot_data_annual$mean_lake_doc_tp))
 
-plot_data_annual$r_preds= predict(lm(plot_data_annual$mean_r~plot_data_annual$mean_doc_load+
-                                       plot_data_annual$mean_tn_load))^2
+plot_data_annual$r_preds= predict(lm(plot_data_annual$mean_r~plot_data_annual$mean_lake_doc+
+                                       plot_data_annual$mean_lake_tp+plot_data_annual$mean_lake_doc_tp))^2
 
 # r plot
 r = ggplot(plot_data_annual, aes(x = r_preds, y = mean_r^2)) +
@@ -415,9 +415,13 @@ r = ggplot(plot_data_annual, aes(x = r_preds, y = mean_r^2)) +
 r
 
 # NEP model
-summary(lm(plot_data_annual$mean_nep~plot_data_annual$mean_tn_tp_load))
+summary(lm(plot_data_annual$mean_nep~plot_data_annual$mean_lake_doc_tp +
+             plot_data_annual$mean_lake_doc_tn +
+             plot_data_annual$mean_lake_tn_tp))
 
-plot_data_annual$nep_preds= predict(lm(plot_data_annual$mean_nep~plot_data_annual$mean_tn_tp_load))
+plot_data_annual$nep_preds= predict(lm(plot_data_annual$mean_nep~plot_data_annual$mean_lake_doc_tp +
+                                         plot_data_annual$mean_lake_doc_tn +
+                                         plot_data_annual$mean_lake_tn_tp))
 
 
 # nep plot
@@ -431,7 +435,7 @@ nep = ggplot(plot_data_annual, aes(x = nep_preds, y = mean_nep)) +
         axis.text = element_text(size = 18)) +
   geom_abline(slope = 1, intercept = 0, linetype = 'dashed', size = 1)+
   annotate(geom = 'text',
-           x = .2, y = .4, angle = 45, size = 6,
+           x = .35, y = .5, angle = 45, size = 6,
            label = '1:1')
 nep
 
@@ -451,4 +455,4 @@ nep
 
 plot_out = cowplot::plot_grid(gpp, r, nep, nrow = 1)
 
-ggsave(filename = 'figures/fig_obs_pred_metab_load.png', plot = plot_out, width = 14, height =5 )
+ggsave(filename = 'figures/fig_obs_pred_metab_in_lake.png', plot = plot_out, width = 14, height =5 )

@@ -3,6 +3,7 @@
 library(dplyr)
 library(ggplot2)
 library(yaml)
+library(cowplot)
 
 analysis_cfg <- yaml::yaml.load_file('lib/cfg/analysis_cfg.yml') # this file holds important analysis info such as CV cutoff
 ### loading in metabolism data for sorting by mean GPP ###
@@ -152,49 +153,67 @@ c_p_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_p_load, y = mean_c_p
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
-        axis.title = element_text(size = 16),
+        axis.title = element_text(size = 13),
         axis.text = element_text(size = 12),
         legend.title = element_blank(),
         legend.text = element_text(size =12)) +
   xlab(expression(C:P~Load~Stoichiometry~(mol:mol))) +
   ylab(expression(C:P~Lake~Stoichiometry~(mol:mol))) +
-  geom_abline(slope = 1, color = 'black', linetype = 'dashed')
+  geom_abline(slope = 1, color = 'black', linetype = 'dashed') +
+  annotate(geom = 'text',
+           x = 9000, y = 9600, angle = 45, size = 6,
+           label = '1:1') +
+  xlim(range(c(load_plot$mean_c_p_load,load_plot$mean_c_p),na.rm = T)) +
+  ylim(range(c(load_plot$mean_c_p_load,load_plot$mean_c_p),na.rm = T))
 
-summary(lm(load_plot$mean_c_p~load_plot$mean_c_p_load))
+summary(lm(data = dplyr::filter(load_plot, !is.na(mean_c_p), !is.na(mean_c_p_load)),
+           formula = mean_c_p~mean_c_p_load))
 
-load_vs_lake_stoich
+# load_vs_lake_stoich
 
 c_n_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_n_load, y = mean_c_n, group = lake)) +
-  geom_point(size = 5) +
+  geom_point(size = 5, color = '#D55E00') +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
-        axis.title = element_text(size = 16),
+        axis.title = element_text(size = 13),
         axis.text = element_text(size = 12),
         legend.title = element_blank(),
         legend.text = element_text(size =12)) +
   xlab(expression(C:N~Load~Stoichiometry~(mol:mol))) +
   ylab(expression(C:N~Lake~Stoichiometry~(mol:mol))) +
-  geom_abline(slope = 1, color = 'black', linetype = 'dashed') # redfield ratios
-summary(lm(load_plot$mean_c_n~load_plot$mean_c_n_load))
+  geom_abline(slope = 1, color = 'black', linetype = 'dashed')  +
+  annotate(geom = 'text',
+           x = 80, y = 87, angle = 45, size = 6,
+           label = '1:1') +
+  xlim(range(c(load_plot$mean_c_n_load,load_plot$mean_c_n),na.rm = T)) +
+  ylim(range(c(load_plot$mean_c_n_load,load_plot$mean_c_n),na.rm = T))
 
-load_vs_lake_stoich
+summary(lm(data = dplyr::filter(load_plot, !is.na(mean_c_n), !is.na(mean_c_n_load)),
+           formula = mean_c_n~mean_c_n_load))
+# load_vs_lake_stoich
 
 n_p_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_n_p_load, y = mean_n_p, group = lake)) +
-  geom_point(size = 5) +
+  geom_point(size = 5, color ='#CC79A7') +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
-        axis.title = element_text(size = 16),
+        axis.title = element_text(size = 13),
         axis.text = element_text(size = 12),
         legend.title = element_blank(),
         legend.text = element_text(size =12)) +
   xlab(expression(N:P~Load~Stoichiometry~(mol:mol))) +
   ylab(expression(N:P~Lake~Stoichiometry~(mol:mol))) +
-  geom_abline(slope = 1, color = 'black', linetype = 'dashed') # redfield ratios
-summary(lm(load_plot$mean_n_p~load_plot$mean_n_p_load))
+  geom_abline(slope = 1, color = 'black', linetype = 'dashed')  +
+  annotate(geom = 'text',
+           x = 160, y = 175, angle = 45, size = 6,
+           label = '1:1') +
+  xlim(range(c(load_plot$mean_n_p_load,load_plot$mean_n_p),na.rm = T)) +
+  ylim(range(c(load_plot$mean_n_p_load,load_plot$mean_n_p),na.rm = T))
 
-load_vs_lake_stoich
+summary(lm(data = dplyr::filter(load_plot, !is.na(mean_n_p), !is.na(mean_n_p_load)),
+           formula = mean_n_p~mean_n_p_load))
+# load_vs_lake_stoich
 
 
 

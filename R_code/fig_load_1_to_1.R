@@ -129,13 +129,45 @@ lake_names <- c('Acton' = 'Acton Lake',
 
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7") # colorblind-friendly pallete
 
-doc_tp <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tp_load *1000*1000, group = lake)) +
-  geom_abline(slope = (1*31)/(106*12), intercept = 0, linetype = 'dashed') +
-  geom_point(size = 5, alpha = .5) +
-  # geom_errorbar(aes(ymin = mean_tp_load *1000*1000 - sd_tp_load*1000*1000,
-  #                    ymax = mean_tp_load *1000*1000 + sd_tp_load*1000*1000))+
-  # geom_errorbarh(aes(xmin = mean_doc_load *1000*1000 - sd_doc_load*1000*1000,
-  #                    xmax = mean_doc_load *1000*1000 + sd_doc_load*1000*1000))+
+redfield_line = function(ratio, x_axis_element, x_axis_range){
+  if(ratio == 'n_p'){
+    if(x_axis_element == 'n'){
+      out = tibble(x = seq(x_axis_range[1],x_axis_range[2], length.out = 100))
+      out$y = out$x * (1*31)/(16*14)
+    }else if(x_axis_element == 'p'){
+      out = tibble(x = seq(x_axis_range[1],x_axis_range[2], length.out = 100))
+      out$y = out$x * (16*14)/(1*31)
+    }
+  }else if(ratio == 'c_p'){
+    if(x_axis_element == 'c'){
+      out = tibble(x = seq(x_axis_range[1],x_axis_range[2], length.out = 100))
+      out$y = out$x * (1*31)/(106*12)
+    }else if(x_axis_element == 'p'){
+      out = tibble(x = seq(x_axis_range[1],x_axis_range[2], length.out = 100))
+      out$y = out$x * (106*12)/(1*31)
+    }
+  }else if(ratio == 'c_n'){
+    if(x_axis_element == 'c'){
+      out = tibble(x = seq(x_axis_range[1],x_axis_range[2], length.out = 100))
+      out$y = out$x * (16*14)/(106*12)
+    }else if(x_axis_element == 'n'){
+      out = tibble(x = seq(x_axis_range[1],x_axis_range[2], length.out = 100))
+      out$y = out$x * (106*12)/(16*14)
+    }
+  }
+  return(out)
+}
+
+doc_tp <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tp_load *1000*1000)) +
+  geom_line(data = redfield_line(ratio = 'c_p',
+                                 x_axis_element = 'c',
+                                 x_axis_range = range(plot_data$mean_doc_load *1000*1000, na.rm = T)),
+            aes(x = x, y = y),
+            linetype = 'dashed') +
+  geom_point(size = 5) +
+  annotate(geom = 'text',
+           x = 10, y = .5, angle = 42, size = 6,
+           label = 'Redfield Ratio') +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
@@ -144,13 +176,21 @@ doc_tp <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tp_load *
         legend.title = element_blank(),
         legend.text = element_text(size =12)) +
   xlab(expression(DOC~Load~(mg~m^-3~day^-1))) +
-  ylab(expression(TP~Load~(mg~m^-3~day^-1)))
+  ylab(expression(TP~Load~(mg~m^-3~day^-1)))+ scale_y_log10() + scale_x_log10()
 
-# doc_tp
+ doc_tp
 
-doc_tn <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tn_load *1000*1000, group = lake)) +
-  geom_abline(slope = (16*14)/(106*12), intercept = 0, linetype = 'dashed') +
-  geom_point(size = 5, alpha = .5) +
+doc_tn <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tn_load *1000*1000)) +
+  # geom_abline(slope = (16*14)/(106*12), intercept = 0, linetype = 'dashed') +
+  geom_line(data = redfield_line(ratio = 'c_n',
+                                 x_axis_element = 'c',
+                                 x_axis_range = range(plot_data$mean_doc_load *1000*1000, na.rm = T)),
+            aes(x = x, y = y),
+            linetype = 'dashed') +
+  geom_point(size = 5, color = '#D55E00') +
+  annotate(geom = 'text',
+           x = 10, y = 5, angle = 42, size = 6,
+           label = 'Redfield Ratio') +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
@@ -159,13 +199,21 @@ doc_tn <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tn_load *
         legend.title = element_blank(),
         legend.text = element_text(size =12)) +
   xlab(expression(DOC~Load~(mg~m^-3~day^-1))) +
-  ylab(expression(TN~Load~(mg~m^-3~day^-1)))
+  ylab(expression(TN~Load~(mg~m^-3~day^-1))) + scale_y_log10() + scale_x_log10()
 
-# doc_tn
+ doc_tn
 
-tn_tp <- ggplot(plot_data, aes(x = mean_tn_load *1000*1000, y = mean_tp_load *1000*1000, group = lake)) +
-  geom_abline(slope = (1*31)/(16*14), intercept = 0, linetype = 'dashed') +
-  geom_point(size = 5, alpha = .5) +
+tn_tp <- ggplot(plot_data, aes(x = mean_tn_load *1000*1000, y = mean_tp_load *1000*1000)) +
+  # geom_abline(slope = (1*31)/(16*14), intercept = 0, linetype = 'dashed') +
+  geom_line(data = redfield_line(ratio = 'n_p',
+                                 x_axis_element = 'n',
+                                 x_axis_range = range(plot_data$mean_tn_load *1000*1000, na.rm = T)),
+            aes(x = x, y = y),
+            linetype = 'dashed') +
+  geom_point(size = 5, color ='#CC79A7') +
+  annotate(geom = 'text',
+           x = 1, y = .5, angle = 47, size = 6,
+           label = 'Redfield Ratio') +
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.placement = 'inside',
@@ -174,9 +222,9 @@ tn_tp <- ggplot(plot_data, aes(x = mean_tn_load *1000*1000, y = mean_tp_load *10
         legend.title = element_blank(),
         legend.text = element_text(size =12)) +
   xlab(expression(TN~Load~(mg~m^-3~day^-1))) +
-  ylab(expression(TP~Load~(mg~m^-3~day^-1)))
+  ylab(expression(TP~Load~(mg~m^-3~day^-1))) + scale_y_log10() + scale_x_log10()
 
-# tn_tp
+ tn_tp
 
 
 g = plot_grid(doc_tn, doc_tp, tn_tp,

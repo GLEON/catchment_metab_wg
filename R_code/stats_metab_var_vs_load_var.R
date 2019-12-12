@@ -33,14 +33,14 @@ cv_cutoff = analysis_cfg$cv_cutoff
 min_doy = analysis_cfg$min_doy
 max_doy = analysis_cfg$max_doy
 
-metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff) %>%
+metab_plot <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff, R_SD/(R*-1) < cv_cutoff) %>%
   group_by(lake, season) %>%
   dplyr::summarise(var_gpp = var(GPP, na.rm=T),
             var_r = var(R, na.rm =T),
             var_nep = var(NEP, na.rm=T)) %>%
   ungroup()
 
-metab_plot_annual <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff) %>%
+metab_plot_annual <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_SD/GPP < cv_cutoff, R_SD/(R*-1) < cv_cutoff) %>%
   group_by(lake) %>%
   dplyr::summarise(var_gpp = var(GPP, na.rm=T),
                    var_r = var(R, na.rm =T),
@@ -50,7 +50,7 @@ metab_plot_annual <- dplyr::filter(all_metab, doy > min_doy, doy < max_doy, GPP_
 #### loading in nutrient load time series ###
 dir<-'results/nutrient load/' # directory of load data
 files<-list.files(dir) # folders in this dir
-files<-files[-grep('Readme',files)] # get rid of README doc
+files<-files[-grep('README',files)] # get rid of README doc
 
 all_load<-data.frame() # data frame to store all load data
 for(i in 1:length(files)){ # loops over all files in load directory
