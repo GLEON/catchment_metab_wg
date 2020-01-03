@@ -70,11 +70,12 @@ cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
 
 # keeping x and y axis scales the same for every plot
 linesize = .5
-pointsize = .8
+pointsize = .9
+line_alpha = .3
 metab <- ggplot(dplyr::filter(metab_plot, !is.na(season)), aes(x = plot_date, y = GPP, group = lake ,color = season)) +
-  geom_line(size = linesize) +
+  geom_line(size = linesize, alpha = line_alpha) +
   geom_point(size = pointsize) +
-  geom_line(data = metab_plot, aes( x= plot_date, y = R, group = lake), size = linesize) +
+  geom_line(data = metab_plot, aes( x= plot_date, y = R, group = lake), size = linesize, alpha = line_alpha) +
   geom_point(data = metab_plot, aes( x= plot_date, y = R, group = lake), size = pointsize) +
   facet_wrap(~lake,labeller = as_labeller(lake_names), strip.position = 'top') +
   theme_classic() +
@@ -98,7 +99,7 @@ metab <- ggplot(dplyr::filter(metab_plot, !is.na(season)), aes(x = plot_date, y 
   ylab(expression(Metabolism~(mg~O[2]~L^-1~day^-1))) +
   geom_hline(yintercept = 0, linetype = 'dashed', color = 'grey')
 
-# metab
+metab
 
 ggsave('figures/fig_metab_timeseries.png', plot = metab, width = 10, height = 10)
 

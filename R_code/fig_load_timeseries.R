@@ -115,8 +115,37 @@ lake_names <- c('Acton' = 'Acton Lake',
 
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7") # colorblind-friendly pallete
 
+
+# what season is the load highest?
+season_summary = load_plot %>%
+  group_by(lake, season) %>%
+  summarise(TP_load = mean(TP_load * 1000 *1000/ Volume..m3., na.rm = T),
+            TN_load = mean(TN_load * 1000 *1000/ Volume..m3., na.rm = T),
+            DOC_load = mean(DOC_load * 1000 *1000/ Volume..m3., na.rm = T)) %>%
+  dplyr::filter(!is.na(season)) %>%
+  ungroup() %>%
+  group_by(lake) %>%
+  mutate(max_DOC = grepl(max(DOC_load, na.rm = T), DOC_load),
+         max_TN = grepl(max(TN_load, na.rm = T), TN_load),
+         max_TP = grepl(max(TP_load, na.rm = T), TP_load)) %>%
+  ungroup()
+
+season_summary %>%
+  group_by(season) %>%
+  summarise(DOC = sum(max_DOC),
+            TN = sum(max_TN),
+            TP = sum(max_TP))
+
+# range of load
+load_plot %>%
+  group_by(lake) %>%
+  summarise(doc_range = diff(range(DOC_load, na.rm = T)),
+            tn_range = diff(range(TN_load, na.rm = T)),
+            tp_range = diff(range(tp_load, na.rm = T)))
+
+
 # keeping x and y axis scales the same for every plot
-load <- ggplot(load_plot, aes(x = plot_date, y = TP_load * 1000 *1000/ Volume..m3., group = lake ,color = season)) +
+load <- ggplot(load_plot, aes(x = plot_date, y = TP_load * 1000 *1000 *1000/ Volume..m3., group = lake ,color = season)) +
   geom_line(size = 1) +
   facet_wrap(~lake, labeller = as_labeller(lake_names), strip.position = 'top') +
   theme_classic() +
@@ -139,8 +168,9 @@ load <- ggplot(load_plot, aes(x = plot_date, y = TP_load * 1000 *1000/ Volume..m
                                 'fall' = '#E69F00',
                                 'NA' = 'white'),
                      labels = c('Spring', 'Summer', 'Fall', '')) +
-  ylab(expression(TP~Load~(mg~m^-3~day^-1)))  +
-  scale_y_log10() +
+  ylab(expression(TP~Load~(mu*g~P~(m^3~lake~water)^-1~day^-1)))  +
+  scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) +
   scale_x_date(date_labels = '%b')
 
 # load
@@ -148,7 +178,7 @@ load <- ggplot(load_plot, aes(x = plot_date, y = TP_load * 1000 *1000/ Volume..m
 ggsave('figures/fig_tp_load_timeseries.png', plot = load, width = 10, height = 10)
 
 # keeping x and y axis scales the same for every plot
-load <- ggplot(load_plot, aes(x = plot_date, y = TN_load * 1000 *1000/ Volume..m3., group = lake ,color = season)) +
+load <- ggplot(load_plot, aes(x = plot_date, y = TN_load * 1000 *1000*1000/ Volume..m3., group = lake ,color = season)) +
   geom_line(size = 1) +
   facet_wrap(~lake, labeller = as_labeller(lake_names), strip.position = 'top') +
   theme_classic() +
@@ -171,8 +201,9 @@ load <- ggplot(load_plot, aes(x = plot_date, y = TN_load * 1000 *1000/ Volume..m
                                'fall' = '#E69F00',
                                'NA' = 'white'),
                     labels = c('Spring', 'Summer', 'Fall', '')) +
-  ylab(expression(TN~Load~(mg~m^-3~day^-1)))  +
-  scale_y_log10() +
+  ylab(expression(TN~Load~(mu*g~N~(m^3~lake~water)^-1~day^-1)))  +
+  scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) +
   scale_x_date(date_labels = '%b')
 
 # load
@@ -203,8 +234,9 @@ load <- ggplot(load_plot, aes(x = plot_date, y = DOC_load * 1000 *1000/ Volume..
                                'fall' = '#E69F00',
                                'NA' = 'white'),
                     labels = c('Spring', 'Summer', 'Fall', '')) +
-  ylab(expression(DOC~Load~(mg~m^-3~day^-1)))  +
-  scale_y_log10() +
+  ylab(expression(DOC~Load~(mg~C~(m^3~lake~water)^-1~day^-1)))  +
+  scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) +
   scale_x_date(date_labels = '%b')
 
 # load

@@ -7,6 +7,7 @@ library(yaml)
 library(MuMIn)
 library(kableExtra)
 library(rcompanion)
+library(scales)
 
 analysis_cfg <- yaml::yaml.load_file('lib/cfg/analysis_cfg.yml') # this file holds important analysis info such as CV cutoff
 ### loading in metabolism data for sorting by mean GPP ###
@@ -151,8 +152,123 @@ summary_df <- left_join(summary_df, metab_plot_annual, by = c('lake'))
 # summarized data
 summary(summary_df)
 
+# are stream / lake concentrations correlated?
+summary(lm(summary_df$mean_lake_doc~summary_df$mean_doc_conc_load_mg_L)) # no
+summary(lm(summary_df$mean_lake_tp~summary_df$mean_tp_conc_load_ug_L)) # yes
+summary(lm(summary_df$mean_lake_tn~summary_df$mean_tn_conc_load_ug_L)) # yes
+
+plot(summary_df$mean_lake_doc~summary_df$mean_doc_conc_load_mg_L)
+plot(summary_df$mean_lake_tp~summary_df$mean_tp_conc_load_ug_L)
+plot(summary_df$mean_lake_tn~summary_df$mean_tn_conc_load_ug_L)
+
+summary(lm(summary_df$mean_lake_doc~summary_df$mean_doc_load))
+summary(lm(summary_df$mean_lake_tp~summary_df$mean_tp_load))
+summary(lm(summary_df$mean_lake_tn~summary_df$mean_tn_load))
+
+plot(summary_df$mean_lake_doc~summary_df$mean_doc_load)
+plot(summary_df$mean_lake_tp~summary_df$mean_tp_load)
+plot(summary_df$mean_lake_tn~summary_df$mean_tn_load)
+
+doc <- ggplot(summary_df, aes(y = mean_lake_doc, x = mean_doc_conc_load_mg_L)) +
+  geom_point(size = 5) +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  ylab(expression(Lake~DOC~(mg~L^-1))) +
+  xlab(expression(Stream~DOC~(mg~L^-1))) +
+  geom_abline(slope = 1, intercept = 0, linetype = 'dashed')+
+  annotate(geom = 'text',
+           x = 15, y = 20, size = 6,
+           label = '1:1')
+
+doc
+
+tn <- ggplot(summary_df, aes(y = mean_lake_tn, x = mean_tn_conc_load_ug_L)) +
+  geom_point(size = 5) +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  ylab(expression(Lake~TN~(mu*g~L^-1))) +
+  xlab(expression(Stream~TN~(mu*g~L^-1))) +
+  geom_abline(slope = 1, intercept = 0, linetype = 'dashed')+
+  annotate(geom = 'text',
+           x = 2500, y = 3000, size = 6,
+           label = '1:1')
+tn
+
+tp <- ggplot(summary_df, aes(y = mean_lake_tp, x = mean_tp_conc_load_ug_L)) +
+  geom_point(size = 5) +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  ylab(expression(Lake~TP~(mu*g~L^-1))) +
+  xlab(expression(Stream~TP~(mu*g~L^-1)))+
+  geom_abline(slope = 1, intercept = 0, linetype = 'dashed')+
+  annotate(geom = 'text',
+           x = 50, y = 60, size = 6,
+           label = '1:1')
+tp
+
+g = plot_grid(doc, tn, tp,
+              labels = c('A', 'B', 'C'), align = 'hv',nrow = 2)
+
+ggsave('figures/fig_stream_lake_conc_1_1.png', plot = g, width = 8, height = 8)
 
 
+# long data for plotting
+long_df = summary_df %>%
+  select(lake, mean_tp_conc_load_ug_L, mean_tn_conc_load_ug_L,
+         mean_doc_conc_load_mg_L, mean_lake_doc, mean_lake_tp, mean_lake_tn) %>%
+  tidyr::gather(key = 'constituent', 'concentration', contains('mean')) %>%
+  mutate(lake_stream = case_when(grepl(pattern = 'load', x = constituent)~ 'stream',
+                                 grepl(pattern = 'lake', x = constituent) ~ 'lake'),
+         constituent = case_when(grepl(pattern = 'tp', x = constituent)~ 'tp',
+                                 grepl(pattern = 'tn', x = constituent) ~ 'tn',
+                                 grepl(pattern = 'doc', x = constituent) ~ 'doc'),
+         concentration = case_when(constituent == 'tp' ~ concentration / 1000, # converting to mg / L
+                                   constituent == 'tn' ~ concentration / 1000,
+                                   TRUE ~ concentration),
+         constituent = paste(constituent, lake_stream, sep = '_'))
 
 
+long_df
+
+long_df$constituent = factor(long_df$constituent,
+                             levels = c('doc_stream', 'doc_lake', 'tn_stream', 'tn_lake', 'tp_stream', 'tp_lake'))
+
+
+concentration_plot = ggplot(long_df, aes(x =constituent, y = concentration, group = constituent, fill = lake_stream)) +
+  geom_boxplot() +
+  geom_jitter(width = .1) +
+  scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x)))+
+  scale_x_discrete(labels=c('Stream DOC', 'Lake DOC', 'Stream TN', 'Lake TN', 'Stream TP', 'Lake TP')) +
+  scale_fill_manual(name = 'lake_stream',
+                    values = c('dodgerblue1','lightblue'),
+                    labels = c('Lake', 'Stream')) +
+  annotation_logticks(sides = 'l') +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  xlab('') +
+  ylab(expression(Concentration~(mg~L^-1)))
+
+
+ggsave('figures/fig_stream_lake_concentration.png', plot = concentration_plot,  width = 8, height = 8)
 

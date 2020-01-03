@@ -148,7 +148,7 @@ lake_names <- c('Acton' = 'Acton Lake',
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7") # colorblind-friendly pallete
 
 # keeping x and y axis scales the same for every plot
-c_p_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_p_load, y = mean_c_p, group = lake)) +
+c_p_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_p_load, y = mean_c_p)) +
   geom_point(size = 5) +
   theme_classic() +
   theme(strip.background = element_blank(),
@@ -160,6 +160,7 @@ c_p_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_p_load, y = mean_c_p
   xlab(expression(C:P~Load~Stoichiometry~(mol:mol))) +
   ylab(expression(C:P~Lake~Stoichiometry~(mol:mol))) +
   geom_abline(slope = 1, color = 'black', linetype = 'dashed') +
+  geom_smooth(method = 'lm', color = 'black', se = F) +
   annotate(geom = 'text',
            x = 9000, y = 9600, angle = 45, size = 6,
            label = '1:1') +
@@ -171,7 +172,7 @@ summary(lm(data = dplyr::filter(load_plot, !is.na(mean_c_p), !is.na(mean_c_p_loa
 
 # load_vs_lake_stoich
 
-c_n_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_n_load, y = mean_c_n, group = lake)) +
+c_n_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_n_load, y = mean_c_n)) +
   geom_point(size = 5, color = '#D55E00') +
   theme_classic() +
   theme(strip.background = element_blank(),
@@ -183,6 +184,7 @@ c_n_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_n_load, y = mean_c_n
   xlab(expression(C:N~Load~Stoichiometry~(mol:mol))) +
   ylab(expression(C:N~Lake~Stoichiometry~(mol:mol))) +
   geom_abline(slope = 1, color = 'black', linetype = 'dashed')  +
+  geom_smooth(method = 'lm', color = '#D55E00', se = F) +
   annotate(geom = 'text',
            x = 80, y = 87, angle = 45, size = 6,
            label = '1:1') +
@@ -193,7 +195,7 @@ summary(lm(data = dplyr::filter(load_plot, !is.na(mean_c_n), !is.na(mean_c_n_loa
            formula = mean_c_n~mean_c_n_load))
 # load_vs_lake_stoich
 
-n_p_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_n_p_load, y = mean_n_p, group = lake)) +
+n_p_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_n_p_load, y = mean_n_p)) +
   geom_point(size = 5, color ='#CC79A7') +
   theme_classic() +
   theme(strip.background = element_blank(),
@@ -205,6 +207,7 @@ n_p_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_n_p_load, y = mean_n_p
   xlab(expression(N:P~Load~Stoichiometry~(mol:mol))) +
   ylab(expression(N:P~Lake~Stoichiometry~(mol:mol))) +
   geom_abline(slope = 1, color = 'black', linetype = 'dashed')  +
+  geom_smooth(method = 'lm', color = '#CC79A7', se = F) +
   annotate(geom = 'text',
            x = 160, y = 175, angle = 45, size = 6,
            label = '1:1') +

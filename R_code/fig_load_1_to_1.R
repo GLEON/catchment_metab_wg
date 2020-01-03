@@ -72,6 +72,32 @@ metaData <- read.csv('data/metadataLookUp.csv',stringsAsFactor=F) %>%
   select(Lake.Name, Volume..m3., Surface.Area..m2., Catchment.Area..km2., Lake.Residence.Time..year., kD)
 all_load <- left_join(all_load, metaData, by = c('lake' = 'Lake.Name'))
 
+in_lake_nutrients = read.table('data/in_lake_nutrients/GLEON_nutrient_inlake.txt', stringsAsFactors = F, header= T) %>% as_tibble() %>%
+  mutate(date = as.Date(dateTime, format = '%Y-%m-%d//%H:%M:%S')) %>%
+  select(-id, -dateTime)
+
+colnames(in_lake_nutrients) <- c('lake', 'TP', 'TN', 'SRP','PO4','NH4','NO3_NO2','NO3','NO2','DOC','depth_m', 'Comment','date')
+
+# Lilli doesn't have DOC data; Mendota and Trout have multiple depths => using surface for their nutrients (0 meters)
+in_lake_nutrients = in_lake_nutrients %>%
+  dplyr::filter(depth_m %in% c(0,NA)) %>%
+  group_by(lake, date) %>%
+  summarise_all(funs(mean(.,na.rm=T))) %>%  # averaging if multiple samples (only occurs for Mendota and Trout I think)
+  ungroup() %>%
+  mutate(lake = case_when(lake == 'Lillsjölidtjärnen' ~ 'Lillsjoliden', # renaming for joining purposes
+                          lake == 'Mångstrettjärn' ~ 'Mangstrettjarn',
+                          lake == 'Nästjärn' ~ 'Nastjarn',
+                          lake == 'Övre_Björntjärn' ~ 'Ovre',
+                          lake == 'Struptjärn' ~ 'Struptjarn',
+                          lake == 'Lilli' ~ 'Lillinonah',
+                          TRUE ~ lake),
+         DOC = case_when(lake != 'Trout' ~ DOC,
+                         lake == 'Trout' & DOC < 10 ~ DOC),# getting rid of DOC outlier for Trout
+         TP = case_when(lake != 'Trout' ~ TP,
+                        lake == 'Trout' & TP > 0 ~ TP)) # getting rid of undetected TP for Trout
+
+all_load = left_join(all_load, in_lake_nutrients, by = c('lake' = 'lake', 'date' = 'date'))
+
 # Units for nutrient load files = kg/day for TP, TN, DOC and m3/s for inflow
 all_load <- all_load %>%
   mutate(ave_tp_conc_load_mol_m3 = TP_load / 31 * 1000 / (inflow * 86400),
@@ -97,7 +123,10 @@ load_plot <- dplyr::filter(all_load, doy > min_doy, doy < max_doy) %>%
                    mean_tn_conc_load_mol_m3 = mean(ave_tn_conc_load_mol_m3, na.rm = T),
                    mean_doc_conc_load_mol_m3 = mean(ave_doc_conc_load_mol_m3, na.rm = T),
                    mean_inflow_m3 = mean((inflow * 86400), na.rm = T),
-                   kD = mean(kD)) %>%
+                   kD = mean(kD),
+                   mean_lake_doc = mean(DOC, na.rm = T),
+                   mean_lake_tn = mean(TN, na.rm = T),
+                   mean_lake_tp = mean(TP, na.rm = T)) %>%
   ungroup()
 
 plot_data <- left_join(load_plot, metab_plot, by = 'lake')
@@ -141,24 +170,24 @@ redfield_line = function(ratio, x_axis_element, x_axis_range){
   }else if(ratio == 'c_p'){
     if(x_axis_element == 'c'){
       out = tibble(x = seq(x_axis_range[1],x_axis_range[2], length.out = 100))
-      out$y = out$x * (1*31)/(106*12)
+      out$y = out$x * (1*31)/(106*12) * 1000
     }else if(x_axis_element == 'p'){
       out = tibble(x = seq(x_axis_range[1],x_axis_range[2], length.out = 100))
-      out$y = out$x * (106*12)/(1*31)
+      out$y = out$x / 1000 * (106*12)/(1*31)
     }
   }else if(ratio == 'c_n'){
     if(x_axis_element == 'c'){
       out = tibble(x = seq(x_axis_range[1],x_axis_range[2], length.out = 100))
-      out$y = out$x * (16*14)/(106*12)
+      out$y = out$x * (16*14)/(106*12) * 1000
     }else if(x_axis_element == 'n'){
       out = tibble(x = seq(x_axis_range[1],x_axis_range[2], length.out = 100))
-      out$y = out$x * (106*12)/(16*14)
+      out$y = out$x / 1000 * (106*12)/(16*14)
     }
   }
   return(out)
 }
 
-doc_tp <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tp_load *1000*1000)) +
+doc_tp <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tp_load *1000*1000*1000)) +
   geom_line(data = redfield_line(ratio = 'c_p',
                                  x_axis_element = 'c',
                                  x_axis_range = range(plot_data$mean_doc_load *1000*1000, na.rm = T)),
@@ -166,7 +195,7 @@ doc_tp <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tp_load *
             linetype = 'dashed') +
   geom_point(size = 5) +
   annotate(geom = 'text',
-           x = 10, y = .5, angle = 42, size = 6,
+           x = 10, y = 420, angle = 42, size = 6,
            label = 'Redfield Ratio') +
   theme_classic() +
   theme(strip.background = element_blank(),
@@ -175,12 +204,17 @@ doc_tp <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tp_load *
         axis.text = element_text(size = 12),
         legend.title = element_blank(),
         legend.text = element_text(size =12)) +
-  xlab(expression(DOC~Load~(mg~m^-3~day^-1))) +
-  ylab(expression(TP~Load~(mg~m^-3~day^-1)))+ scale_y_log10() + scale_x_log10()
+  xlab(expression(DOC~Load~(mg~C~m^-3~day^-1))) +
+  ylab(expression(TP~Load~(mu*g~P~m^-3~day^-1)))+ scale_y_log10() + scale_x_log10()
+  # scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
+  #               labels = trans_format("log10", math_format(10^.x))) +
+  # scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
+  #               labels = trans_format("log10", math_format(10^.x)))
 
- doc_tp
+doc_tp
 
-doc_tn <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tn_load *1000*1000)) +
+
+doc_tn <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tn_load *1000*1000*1000)) +
   # geom_abline(slope = (16*14)/(106*12), intercept = 0, linetype = 'dashed') +
   geom_line(data = redfield_line(ratio = 'c_n',
                                  x_axis_element = 'c',
@@ -189,7 +223,7 @@ doc_tn <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tn_load *
             linetype = 'dashed') +
   geom_point(size = 5, color = '#D55E00') +
   annotate(geom = 'text',
-           x = 10, y = 5, angle = 42, size = 6,
+           x = 10, y = 5000, angle = 42, size = 6,
            label = 'Redfield Ratio') +
   theme_classic() +
   theme(strip.background = element_blank(),
@@ -198,21 +232,25 @@ doc_tn <- ggplot(plot_data, aes(x = mean_doc_load *1000*1000, y = mean_tn_load *
         axis.text = element_text(size = 12),
         legend.title = element_blank(),
         legend.text = element_text(size =12)) +
-  xlab(expression(DOC~Load~(mg~m^-3~day^-1))) +
-  ylab(expression(TN~Load~(mg~m^-3~day^-1))) + scale_y_log10() + scale_x_log10()
+  xlab(expression(DOC~Load~(mg~C~m^-3~day^-1))) +
+  ylab(expression(TN~Load~(mu*g~P~m^-3~day^-1))) + scale_y_log10() + scale_x_log10()
+  # scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
+  #               labels = trans_format("log10", math_format(10^.x))) +
+  # scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
+  #               labels = trans_format("log10", math_format(10^.x)))
 
- doc_tn
+doc_tn
 
-tn_tp <- ggplot(plot_data, aes(x = mean_tn_load *1000*1000, y = mean_tp_load *1000*1000)) +
+tn_tp <- ggplot(plot_data, aes(x = mean_tn_load *1000*1000*1000, y = mean_tp_load *1000*1000*1000)) +
   # geom_abline(slope = (1*31)/(16*14), intercept = 0, linetype = 'dashed') +
   geom_line(data = redfield_line(ratio = 'n_p',
                                  x_axis_element = 'n',
-                                 x_axis_range = range(plot_data$mean_tn_load *1000*1000, na.rm = T)),
+                                 x_axis_range = range(plot_data$mean_tn_load *1000*1000*1000, na.rm = T)),
             aes(x = x, y = y),
             linetype = 'dashed') +
   geom_point(size = 5, color ='#CC79A7') +
   annotate(geom = 'text',
-           x = 1, y = .5, angle = 47, size = 6,
+           x = 1000, y = 600, angle = 47, size = 6,
            label = 'Redfield Ratio') +
   theme_classic() +
   theme(strip.background = element_blank(),
@@ -221,17 +259,103 @@ tn_tp <- ggplot(plot_data, aes(x = mean_tn_load *1000*1000, y = mean_tp_load *10
         axis.text = element_text(size = 12),
         legend.title = element_blank(),
         legend.text = element_text(size =12)) +
-  xlab(expression(TN~Load~(mg~m^-3~day^-1))) +
-  ylab(expression(TP~Load~(mg~m^-3~day^-1))) + scale_y_log10() + scale_x_log10()
+  xlab(expression(TN~Load~(mu*g~m^-3~day^-1))) +
+  ylab(expression(TP~Load~(mu*g~m^-3~day^-1))) +
+  scale_y_log10() + scale_x_log10()
+  # scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
+  #               labels = trans_format("log10", math_format(10^.x))) +
+  # scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
+  #               labels = trans_format("log10", math_format(10^.x)))
 
- tn_tp
+tn_tp
+
+lake_doc_tp <- ggplot(plot_data, aes(x = mean_lake_doc, y = mean_lake_tp)) +
+  geom_line(data = redfield_line(ratio = 'c_p',
+                                 x_axis_element = 'c',
+                                 x_axis_range = range(plot_data$mean_lake_doc, na.rm = T)),
+            aes(x = x, y = y),
+            linetype = 'dashed') +
+  geom_point(size = 5) +
+  annotate(geom = 'text',
+           x = 10, y = 320, angle = 26, size = 6,
+           label = 'Redfield Ratio') +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  xlab(expression(Lake~DOC~(mg~C~L^-1))) +
+  ylab(expression(Lake~TP~(mu*g~P~L^-1))) +
+  scale_y_log10() + scale_x_log10()
+  # scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
+  #               labels = trans_format("log10", math_format(10^.x))) +
+  # scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
+  #               labels = trans_format("log10", math_format(10^.x)))
+
+lake_doc_tp
 
 
-g = plot_grid(doc_tn, doc_tp, tn_tp,
-              labels = c('A', 'B', 'C'), align = 'hv',nrow = 2)
+lake_doc_tn <- ggplot(plot_data, aes(x = mean_lake_doc, y = mean_lake_tn)) +
+  geom_line(data = redfield_line(ratio = 'c_n',
+                                 x_axis_element = 'c',
+                                 x_axis_range = range(plot_data$mean_lake_doc, na.rm = T)),
+            aes(x = x, y = y),
+            linetype = 'dashed') +
+  geom_point(size = 5, color = '#D55E00') +
+  annotate(geom = 'text',
+           x = 10, y = 2300, angle = 37, size = 6,
+           label = 'Redfield Ratio') +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  xlab(expression(Lake~DOC~(mg~C~L^-1))) +
+  ylab(expression(Lake~TN~(mu*g~N~L^-1)))  +
+  scale_y_log10() + scale_x_log10()
+# scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
+#               labels = trans_format("log10", math_format(10^.x))) +
+# scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
+#               labels = trans_format("log10", math_format(10^.x)))
+
+lake_doc_tn
+
+lake_tn_tp <- ggplot(plot_data, aes(x = mean_lake_tn, y = mean_lake_tp)) +
+  geom_line(data = redfield_line(ratio = 'n_p',
+                                 x_axis_element = 'n',
+                                 x_axis_range = range(plot_data$mean_lake_tn, na.rm = T)),
+            aes(x = x, y = y),
+            linetype = 'dashed') +
+  geom_point(size = 5, color ='#CC79A7') +
+  annotate(geom = 'text',
+           x = 1000, y = 230, angle = 35, size = 6,
+           label = 'Redfield Ratio') +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.placement = 'inside',
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size =12)) +
+  xlab(expression(Lake~TN~(mu*g~N~L^-1))) +
+  ylab(expression(Lake~TP~(mu*g~P~L^-1))) +
+  scale_y_log10() + scale_x_log10()
+# scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
+#               labels = trans_format("log10", math_format(10^.x))) +
+# scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
+#               labels = trans_format("log10", math_format(10^.x)))
+
+lake_tn_tp
+
+g = plot_grid(doc_tn, doc_tp, tn_tp, lake_doc_tn, lake_doc_tp, lake_tn_tp,
+              labels = c('A', 'B', 'C', 'D', 'E', 'F'), align = 'hv',nrow = 2)
 
 # g
 
-ggsave('figures/fig_load_1_to_1.png', plot = g, width = 8, height = 8)
+ggsave('figures/fig_load_lake_scatter.png', plot = g, width = 12, height = 8)
 
 
