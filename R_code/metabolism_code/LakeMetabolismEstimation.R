@@ -3,7 +3,7 @@
 # for(i in 12:17){
 library(dplyr)
 
-i=10
+i=1
 toRm=ls()
 toRm=toRm[-which(toRm=='i')]
 rm(list=toRm)
