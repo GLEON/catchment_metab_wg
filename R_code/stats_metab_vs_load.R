@@ -1,12 +1,14 @@
 # statistics for predictors of lake metabolism
 
 library(dplyr)
+library(tidyr)
 library(cowplot)
 library(ggplot2)
 library(yaml)
 library(MuMIn)
 library(kableExtra)
 library(rcompanion)
+library(sjPlot)
 
 analysis_cfg <- yaml::yaml.load_file('lib/cfg/analysis_cfg.yml') # this file holds important analysis info such as CV cutoff
 ### loading in metabolism data for sorting by mean GPP ###
@@ -280,7 +282,7 @@ for(i in seasons){
     predictors = c('mean_doc_load', 'mean_tn_load', 'mean_tp_load',
                    'mean_doc_tp_load', 'mean_doc_tn_load', 'mean_tn_tp_load')
     gpp_data = plot_data_annual %>%
-      select(rbind('mean_gpp',predictors)) %>%
+      select(c('mean_gpp',predictors)) %>%
       na.omit()
     gpp_corr_matrix = gpp_data %>% as.matrix() %>% Hmisc::rcorr()
 
@@ -291,7 +293,7 @@ for(i in seasons){
 
     # ER
     r_data = plot_data_annual %>%
-      select(rbind('mean_r',predictors)) %>%
+      select(c('mean_r',predictors)) %>%
       na.omit()
 
     global_model_r = lm(mean_r ~ ., data = r_data)
@@ -301,7 +303,7 @@ for(i in seasons){
 
     # NEP
     nep_data = plot_data_annual %>%
-      select(rbind('mean_nep',predictors)) %>%
+      select(c('mean_nep',predictors)) %>%
       na.omit()
 
     global_model_nep = lm(mean_nep ~ ., data = nep_data)
@@ -320,7 +322,7 @@ for(i in seasons){
                    'mean_doc_tp_load', 'mean_doc_tn_load', 'mean_tn_tp_load')
     gpp_data = plot_data %>%
       dplyr::filter(season == i) %>%
-      select(rbind('mean_gpp',predictors)) %>%
+      select(c('mean_gpp',predictors)) %>%
       na.omit()
     gpp_corr_matrix = gpp_data %>% as.matrix() %>% Hmisc::rcorr()
 
@@ -332,7 +334,7 @@ for(i in seasons){
     # ER
     r_data = plot_data %>%
       dplyr::filter(season == i) %>%
-      select(rbind('mean_r',predictors)) %>%
+      select(c('mean_r',predictors)) %>%
       na.omit()
 
     global_model_r = lm(mean_r ~ ., data = r_data)
@@ -343,7 +345,7 @@ for(i in seasons){
     # NEP
     nep_data = plot_data %>%
       dplyr::filter(season == i) %>%
-      select(rbind('mean_nep',predictors)) %>%
+      select(c('mean_nep',predictors)) %>%
       na.omit()
 
     global_model_nep = lm(mean_nep ~ ., data = nep_data)
@@ -358,7 +360,7 @@ for(i in seasons){
 }
 
 all_out = bind_rows(gpp_out, r_out, nep_out) %>%
-  mutate(metab_response = c(rep('gpp',nrow(gpp_out)), rep('r', nrow(r_out)), rep('nep', nrow(nep_out))))
+  mutate(metab_response = c(rep('GPP',nrow(gpp_out)), rep('R', nrow(r_out)), rep('NEP', nrow(nep_out))))
 
 saveRDS(all_out, 'results/AIC_models/metab_load_aic_transformed_variables.rds')
 
@@ -366,7 +368,32 @@ saveRDS(all_out, 'results/AIC_models/metab_load_aic_transformed_variables.rds')
 #   kable() %>%
 #   kable_styling(bootstrap_options = "striped", full_width = F) %>%
 #   save_kable(file = 'results/AIC_models/metab_lake_aic_transformed_variables_table.html', self_contained = T)
+round_tab = function(x){round(x, digits = 2)}
 
+table_out = all_out %>%
+  select('(Intercept)', mean_doc_load, mean_tn_load, mean_tp_load, mean_doc_tn_load, mean_doc_tp_load, mean_tn_tp_load, AICc, metab_response) %>%
+  mutate_if(.predicate = is.numeric, .funs = round_tab) %>%
+  imputeTS::na_replace(fill = '')
+
+tab_df(x = table_out,
+       col.header = c('Intercept', 'log10(DOC Load)', 'log10(TN Load)', 'log10(TP Load)', 'sqrt(DOC:TN Load)', 'sqrt(DOC:TP Load)', 'sqrt(TN:TP Load)', 'AIC', 'Response Variable'),
+       alternate.rows = T, file = 'tables/load_metab_AIC_table.doc')
+
+#copying to see transformations
+# transformations for normality
+# plot_data_annual <- plot_data_annual %>%
+#   mutate(mean_gpp = log10(mean_gpp),
+#          mean_r = sqrt(mean_r * -1),
+#          mean_tp_load = log10(mean_tp_load),
+#          mean_tn_load = log10(mean_tn_load),
+#          mean_doc_load = log10(mean_doc_load),
+#          mean_doc_tp_load = sqrt(mean_doc_tp_load),
+#          mean_doc_tn_load = sqrt(mean_doc_tn_load),
+#          mean_tn_tp_load = sqrt(mean_tn_tp_load),
+#          mean_lake_tn = log10(mean_lake_tn),
+#          mean_lake_tp = log10(mean_lake_tp),
+#          mean_lake_doc_tp = sqrt(mean_lake_doc_tp),
+#          mean_lake_tn_tp = log10(mean_lake_tn_tp))
 
 # GPP model
 summary(lm(plot_data_annual$mean_gpp~plot_data_annual$mean_doc_load+
