@@ -72,11 +72,11 @@ cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
 linesize = .5
 pointsize = .9
 line_alpha = .3
-metab <- ggplot(dplyr::filter(metab_plot, !is.na(season)), aes(x = plot_date, y = GPP, group = lake ,color = season)) +
+metab <- ggplot(dplyr::filter(metab_plot, !is.na(season)), aes(x = plot_date, y = GPP, color = season)) +
   geom_line(size = linesize, alpha = line_alpha) +
   geom_point(size = pointsize) +
-  geom_line(data = metab_plot, aes( x= plot_date, y = R, group = lake), size = linesize, alpha = line_alpha) +
-  geom_point(data = metab_plot, aes( x= plot_date, y = R, group = lake), size = pointsize) +
+  geom_line(data = metab_plot, aes( x= plot_date, y = R), size = linesize, alpha = line_alpha) +
+  geom_point(data = metab_plot, aes( x= plot_date, y = R), size = pointsize) +
   facet_wrap(~lake,labeller = as_labeller(lake_names), strip.position = 'top') +
   theme_classic() +
   theme(strip.background = element_blank(),

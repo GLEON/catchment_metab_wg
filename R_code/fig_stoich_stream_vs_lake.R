@@ -119,9 +119,21 @@ load_plot <- dplyr::filter(all_load, doy > min_doy, doy < max_doy) %>%
   dplyr::summarise(mean_c_p_load = mean(DOC_load/TP_load, na.rm = T),
                    mean_c_n_load = mean(DOC_load/TN_load, na.rm = T),
                    mean_n_p_load = mean(TN_load/TP_load, na.rm = T),
+                   max_c_p_load = max(DOC_load/TP_load, na.rm = T),
+                   max_c_n_load = max(DOC_load/TN_load, na.rm = T),
+                   max_n_p_load = max(TN_load/TP_load, na.rm = T),
+                   min_c_p_load = min(DOC_load/TP_load, na.rm = T),
+                   min_c_n_load = min(DOC_load/TN_load, na.rm = T),
+                   min_n_p_load = min(TN_load/TP_load, na.rm = T),
                    mean_c_p = mean(DOC/TP, na.rm = T),
                    mean_c_n = mean(DOC/TN, na.rm = T),
-                   mean_n_p = mean(TN/TP, na.rm = T)) %>%
+                   mean_n_p = mean(TN/TP, na.rm = T),
+                   max_c_p = max(DOC/TP, na.rm = T),
+                   max_c_n = max(DOC/TN, na.rm = T),
+                   max_n_p = max(TN/TP, na.rm = T),
+                   min_c_p = min(DOC/TP, na.rm = T),
+                   min_c_n = min(DOC/TN, na.rm = T),
+                   min_n_p = min(TN/TP, na.rm = T)) %>%
   ungroup()
 
 
@@ -147,7 +159,20 @@ lake_names <- c('Acton' = 'Acton Lake',
 
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7") # colorblind-friendly pallete
 
+range(load_plot$mean_c_n_load, na.rm = T)
+range(load_plot$mean_c_p_load, na.rm = T)
+range(load_plot$mean_n_p_load, na.rm = T)
+
+range(load_plot$mean_c_n, na.rm = T)
+range(load_plot$mean_c_p, na.rm = T)
+range(load_plot$mean_n_p, na.rm = T)
+
 # keeping x and y axis scales the same for every plot
+mod_c_p = summary(lm(data = dplyr::filter(load_plot, !is.na(mean_c_p), !is.na(mean_c_p_load)),
+                     formula = mean_c_p~mean_c_p_load))
+c_p_pval = round(mod_c_p$coefficients[8], digits = 2)
+c_p_r2 = round(mod_c_p$r.squared, digits = 2)
+
 c_p_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_p_load, y = mean_c_p)) +
   geom_point(size = 5) +
   theme_classic() +
@@ -164,13 +189,19 @@ c_p_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_p_load, y = mean_c_p
   annotate(geom = 'text',
            x = 9000, y = 9600, angle = 45, size = 6,
            label = '1:1') +
+  annotate(geom = 'text',
+           x = 2500, y = 9500,
+           label = paste('p-val:',c_p_pval,'\n','R2:', c_p_r2),
+           size = 6) +
   xlim(range(c(load_plot$mean_c_p_load,load_plot$mean_c_p),na.rm = T)) +
   ylim(range(c(load_plot$mean_c_p_load,load_plot$mean_c_p),na.rm = T))
 
-summary(lm(data = dplyr::filter(load_plot, !is.na(mean_c_p), !is.na(mean_c_p_load)),
-           formula = mean_c_p~mean_c_p_load))
-
 # load_vs_lake_stoich
+
+mod_c_n = summary(lm(data = dplyr::filter(load_plot, !is.na(mean_c_n), !is.na(mean_c_n_load)),
+           formula = mean_c_n~mean_c_n_load))
+c_n_pval = round(mod_c_n$coefficients[8], digits = 2)
+c_n_r2 = round(mod_c_n$r.squared, digits = 2)
 
 c_n_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_n_load, y = mean_c_n)) +
   geom_point(size = 5, color = '#D55E00') +
@@ -188,12 +219,18 @@ c_n_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_c_n_load, y = mean_c_n
   annotate(geom = 'text',
            x = 80, y = 87, angle = 45, size = 6,
            label = '1:1') +
+  annotate(geom = 'text',
+           x = 30, y = 95,
+           label = paste('p-val:',c_n_pval,'\n','R2:', c_n_r2),
+           size = 6) +
   xlim(range(c(load_plot$mean_c_n_load,load_plot$mean_c_n),na.rm = T)) +
   ylim(range(c(load_plot$mean_c_n_load,load_plot$mean_c_n),na.rm = T))
 
-summary(lm(data = dplyr::filter(load_plot, !is.na(mean_c_n), !is.na(mean_c_n_load)),
-           formula = mean_c_n~mean_c_n_load))
 # load_vs_lake_stoich
+mod_n_p = summary(lm(data = dplyr::filter(load_plot, !is.na(mean_n_p), !is.na(mean_n_p_load)),
+                     formula = mean_n_p~mean_n_p_load))
+n_p_pval = round(mod_n_p$coefficients[8], digits = 2)
+n_p_r2 = round(mod_n_p$r.squared, digits = 2)
 
 n_p_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_n_p_load, y = mean_n_p)) +
   geom_point(size = 5, color ='#CC79A7') +
@@ -211,11 +248,13 @@ n_p_load_vs_lake_stoich <- ggplot(load_plot, aes(x = mean_n_p_load, y = mean_n_p
   annotate(geom = 'text',
            x = 160, y = 175, angle = 45, size = 6,
            label = '1:1') +
+  annotate(geom = 'text',
+           x = 70, y = 200,
+           label = paste('p-val:',n_p_pval,'\n','R2:', n_p_r2),
+           size = 6) +
   xlim(range(c(load_plot$mean_n_p_load,load_plot$mean_n_p),na.rm = T)) +
   ylim(range(c(load_plot$mean_n_p_load,load_plot$mean_n_p),na.rm = T))
 
-summary(lm(data = dplyr::filter(load_plot, !is.na(mean_n_p), !is.na(mean_n_p_load)),
-           formula = mean_n_p~mean_n_p_load))
 # load_vs_lake_stoich
 
 

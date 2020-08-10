@@ -132,17 +132,29 @@ season_summary = load_plot %>%
 
 season_summary %>%
   group_by(season) %>%
-  summarise(DOC = sum(max_DOC),
-            TN = sum(max_TN),
-            TP = sum(max_TP))
+  summarise(DOC = sum(max_DOC)/ 14,
+            TN = sum(max_TN) / 14 ,
+            TP = sum(max_TP) / 14)
+
+season_summary %>%
+  group_by(season) %>%
+  summarise(DOC = mean(DOC_load, na.rm = T),
+            TN = mean(TN_load, na.rm = T),
+            TP = mean(TP_load, na.rm = T))
 
 # range of load
 load_plot %>%
   group_by(lake) %>%
-  summarise(doc_range = diff(range(DOC_load, na.rm = T)),
-            tn_range = diff(range(TN_load, na.rm = T)),
-            tp_range = diff(range(tp_load, na.rm = T)))
+  summarise(doc_max = max(DOC_load* 1000 *1000/ Volume..m3., na.rm = T),
+            doc_min = min(DOC_load* 1000 *1000/ Volume..m3., na.rm = T),
+            tn_max = max(TN_load* 1000 *1000*1000/ Volume..m3., na.rm = T),
+            tn_min = min(TN_load* 1000 *1000*1000/ Volume..m3., na.rm = T),
+            tp_max = max(TP_load* 1000 *1000*1000/ Volume..m3., na.rm = T),
+            tp_min = min(TP_load* 1000 *1000*1000/ Volume..m3., na.rm = T))
 
+round(range(load_plot$DOC_load * 1000 *1000/ load_plot$Volume..m3., na.rm = T)) # mg C (m^3 lake water)^-1 day^-1
+round(range(load_plot$TN_load* 1000 *1000*1000/ load_plot$Volume..m3., na.rm = T)) # ug N (m^3 lake water)^-1 day^-1
+round(range(load_plot$TP_load* 1000 *1000 *1000/ load_plot$Volume..m3., na.rm = T)) # ug P (m^3 lake water)^-1 day^-1
 
 # keeping x and y axis scales the same for every plot
 load <- ggplot(load_plot, aes(x = plot_date, y = TP_load * 1000 *1000 *1000/ Volume..m3., group = lake ,color = season)) +
