@@ -9,6 +9,7 @@ library(MuMIn)
 library(kableExtra)
 library(rcompanion)
 library(sjPlot)
+library(caret)
 
 analysis_cfg <- yaml::yaml.load_file('lib/cfg/analysis_cfg.yml') # this file holds important analysis info such as CV cutoff
 ### loading in metabolism data for sorting by mean GPP ###
@@ -267,6 +268,8 @@ plot_data_annual <- plot_data_annual %>%
 #          mean_doc_tn_load = sqrt(mean_doc_tn_load),
 #          mean_tn_tp_load = sqrt(mean_tn_tp_load))
 
+# checking multicollinearity for the model
+# car::vif(global_model_gpp)
 
 ## multi model selection based on AIC
 
@@ -287,6 +290,12 @@ for(i in seasons){
     gpp_corr_matrix = gpp_data %>% as.matrix() %>% Hmisc::rcorr()
 
     global_model_gpp = lm(mean_gpp ~ ., data = gpp_data)
+    # testing for multicollinearity
+    gpp_vif = car::vif(global_model_gpp)
+    car::vif(lm(mean_gpp ~ ., data = select(gpp_data, -mean_lake_tn, -mean_lake_doc_tp, -mean_lake_doc_tn)))
+    reduced_gpp_data = select(gpp_data, -mean_lake_tn, -mean_lake_doc_tp, -mean_lake_doc_tn)
+
+    global_model_gpp = lm(mean_gpp ~ ., data = reduced_gpp_data)
 
     all_gpp_mods = dredge(global_model_gpp) %>% dplyr::filter(delta <= 2) %>% as_tibble()
     all_gpp_mods = mutate(all_gpp_mods, season = i, lakes = nrow(gpp_data))
@@ -297,6 +306,9 @@ for(i in seasons){
       na.omit()
 
     global_model_r = lm(mean_r ~ ., data = r_data)
+    reduced_r_data = select(r_data, -mean_lake_tn, -mean_lake_doc_tp, -mean_lake_doc_tn)
+
+    global_model_r = lm(mean_r ~ ., data = reduced_r_data)
 
     all_r_mods = dredge(global_model_r) %>% dplyr::filter(delta <= 2) %>% as_tibble()
     all_r_mods = mutate(all_r_mods, season = i, lakes = nrow(r_data))
@@ -307,6 +319,9 @@ for(i in seasons){
       na.omit()
 
     global_model_nep = lm(mean_nep ~ ., data = nep_data)
+    reduced_nep_data = select(nep_data, -mean_lake_tn, -mean_lake_doc_tp, -mean_lake_doc_tn)
+
+    global_model_nep = lm(mean_nep ~ ., data = reduced_nep_data)
 
     all_nep_mods = dredge(global_model_nep) %>% dplyr::filter(delta <= 2) %>% as_tibble()
     all_nep_mods = mutate(all_nep_mods, season = i, lakes = nrow(nep_data))
