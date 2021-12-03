@@ -14,7 +14,8 @@ p1_targets <- list(
       season_data = p0_season_cutoff_data,
       config = p0_config,
       out_file = '1_plot/out/metab_timeseries_plot.png'
-    )
+    ),
+    format = 'file'
   ),
 
   tar_target(
@@ -24,8 +25,40 @@ p1_targets <- list(
       inlake_data = p0_inlake_nutrient_timeseries_data,
       config = p0_config,
       out_file = '1_plot/out/stoich_timeseries_plot.png'
+    ),
+    format = 'file'
+  ),
+
+  tar_target(
+    p1_stream_lake_nutrient_png,
+    plot_stream_lake_nutrient(
+      load_data = p0_load_timeseries_data,
+      inlake_data = p0_inlake_nutrient_timeseries_data,
+      config = p0_config,
+      out_file = '1_plot/out/stream_lake_nutrient_1_1.png'
+    ),
+    format = 'file'
+  ),
+
+  tar_target(
+    p1_stream_lake_stoich_scatter_png,
+    plot_stream_lake_stoich_scatter(
+      load_data = p0_load_timeseries_data,
+      inlake_data = p0_inlake_nutrient_timeseries_data,
+      config = p0_config,
+      out_file = '1_plot/out/stream_lake_stoic_scatter.png'
+    ),
+    format = 'file'
+  ),
+
+  tar_target(
+    p1_plot_stoich_stream_vs_lake_png,
+    plot_stoich_stream_vs_lake(
+      load_data = p0_load_timeseries_data,
+      inlake_data = p0_inlake_nutrient_timeseries_data,
+      config = p0_config,
+      out_file = '1_plot/out/plot_stoich_stream_vs_lake.png'
     )
   )
-
 )
 

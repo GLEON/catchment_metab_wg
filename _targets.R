@@ -4,7 +4,8 @@ library(targets)
 tar_option_set(packages = c(
   "tidyverse",
   "ggplot2",
-  "yaml"
+  "yaml",
+  "cowplot"
 ))
 
 # Phase target makefiles
