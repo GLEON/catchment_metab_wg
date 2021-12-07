@@ -247,7 +247,6 @@ plot_stream_lake_nutrient <- function(
            ave_tn_conc_load_mol_m3 = TN_load / 14 * 1000 / (inflow * 86400),
            ave_doc_conc_load_mol_m3 = DOC_load / 12 * 1000 / (inflow * 86400))
 
-  browser()
   summary_df <- dplyr::filter(all_load, doy > min_doy, doy < max_doy) %>%
     group_by(lake) %>%
     dplyr::summarise(mean_tp_load = mean(TP_load / Volume..m3., na.rm=T),
@@ -285,7 +284,9 @@ plot_stream_lake_nutrient <- function(
     geom_abline(slope = 1, intercept = 0, linetype = 'dashed')+
     annotate(geom = 'text',
              x = 15, y = 20, size = 6,
-             label = '1:1')
+             label = '1:1') +
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0)
 
   tn <- ggplot(summary_df, aes(y = mean_lake_tn, x = mean_tn_conc_load_ug_L)) +
     geom_point(size = 5) +
@@ -301,7 +302,9 @@ plot_stream_lake_nutrient <- function(
     geom_abline(slope = 1, intercept = 0, linetype = 'dashed')+
     annotate(geom = 'text',
              x = 2500, y = 3000, size = 6,
-             label = '1:1')
+             label = '1:1') +
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0)
 
   tp <- ggplot(summary_df, aes(y = mean_lake_tp, x = mean_tp_conc_load_ug_L)) +
     geom_point(size = 5) +
@@ -317,9 +320,11 @@ plot_stream_lake_nutrient <- function(
     geom_abline(slope = 1, intercept = 0, linetype = 'dashed')+
     annotate(geom = 'text',
              x = 50, y = 60, size = 6,
-             label = '1:1')
+             label = '1:1') +
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0)
 
-  g = plot_grid(doc, tn, tp,
+  g = cowplot::plot_grid(doc, tn, tp,
                 labels = c('A', 'B', 'C'), align = 'hv',nrow = 1)
 
   ggsave(out_file,
@@ -438,8 +443,9 @@ plot_stream_lake_stoich_scatter <- function(
           legend.title = element_blank(),
           legend.text = element_text(size =12)) +
     xlab(expression(DOC~Load~(mg~C~m^-3~day^-1))) +
-    ylab(expression(TP~Load~(mu*g~P~m^-3~day^-1)))+ scale_y_log10() + scale_x_log10()
-
+    ylab(expression(TP~Load~(mu*g~P~m^-3~day^-1)))+ scale_y_log10() + scale_x_log10()+
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0)
 
   doc_tn <- ggplot(load_plot, aes(x = mean_doc_load *1000*1000, y = mean_tn_load *1000*1000*1000)) +
     # geom_abline(slope = (16*14)/(106*12), intercept = 0, linetype = 'dashed') +
@@ -460,7 +466,9 @@ plot_stream_lake_stoich_scatter <- function(
           legend.title = element_blank(),
           legend.text = element_text(size =12)) +
     xlab(expression(DOC~Load~(mg~C~m^-3~day^-1))) +
-    ylab(expression(TN~Load~(mu*g~P~m^-3~day^-1))) + scale_y_log10() + scale_x_log10()
+    ylab(expression(TN~Load~(mu*g~P~m^-3~day^-1))) + scale_y_log10() + scale_x_log10()+
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0)
 
   tn_tp <- ggplot(load_plot, aes(x = mean_tn_load *1000*1000*1000, y = mean_tp_load *1000*1000*1000)) +
     # geom_abline(slope = (1*31)/(16*14), intercept = 0, linetype = 'dashed') +
@@ -482,7 +490,9 @@ plot_stream_lake_stoich_scatter <- function(
           legend.text = element_text(size =12)) +
     xlab(expression(TN~Load~(mu*g~m^-3~day^-1))) +
     ylab(expression(TP~Load~(mu*g~m^-3~day^-1))) +
-    scale_y_log10() + scale_x_log10()
+    scale_y_log10() + scale_x_log10()+
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0)
 
   lake_doc_tp <- ggplot(load_plot, aes(x = mean_lake_doc, y = mean_lake_tp)) +
     geom_line(data = redfield_line(ratio = 'c_p',
@@ -503,7 +513,9 @@ plot_stream_lake_stoich_scatter <- function(
           legend.text = element_text(size =12)) +
     xlab(expression(Lake~DOC~(mg~C~L^-1))) +
     ylab(expression(Lake~TP~(mu*g~P~L^-1))) +
-    scale_y_log10() + scale_x_log10()
+    scale_y_log10() + scale_x_log10()+
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0)
 
 
   lake_doc_tn <- ggplot(load_plot, aes(x = mean_lake_doc, y = mean_lake_tn)) +
@@ -525,7 +537,9 @@ plot_stream_lake_stoich_scatter <- function(
           legend.text = element_text(size =12)) +
     xlab(expression(Lake~DOC~(mg~C~L^-1))) +
     ylab(expression(Lake~TN~(mu*g~N~L^-1)))  +
-    scale_y_log10() + scale_x_log10()
+    scale_y_log10() + scale_x_log10()+
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0)
 
   lake_tn_tp <- ggplot(load_plot, aes(x = mean_lake_tn, y = mean_lake_tp)) +
     geom_line(data = redfield_line(ratio = 'n_p',
@@ -546,10 +560,12 @@ plot_stream_lake_stoich_scatter <- function(
           legend.text = element_text(size =12)) +
     xlab(expression(Lake~TN~(mu*g~N~L^-1))) +
     ylab(expression(Lake~TP~(mu*g~P~L^-1))) +
-    scale_y_log10() + scale_x_log10()
+    scale_y_log10() + scale_x_log10()+
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0)
 
 
-  g = plot_grid(doc_tn, doc_tp, tn_tp, lake_doc_tn, lake_doc_tp, lake_tn_tp,
+  g = cowplot::plot_grid(doc_tn, doc_tp, tn_tp, lake_doc_tn, lake_doc_tp, lake_tn_tp,
                 labels = c('A', 'B', 'C', 'D', 'E', 'F'), align = 'hv',nrow = 2)
 
   ggsave(out_file,
@@ -660,7 +676,9 @@ plot_stoich_stream_vs_lake <- function(
     scale_x_log10(limits = range(c(exp(load_plot$mean_c_p_load),
                                    exp(load_plot$mean_c_p)), na.rm = T)) +
     scale_y_log10(limits = range(c(exp(load_plot$mean_c_p_load),
-                                   exp(load_plot$mean_c_p)), na.rm = T))
+                                   exp(load_plot$mean_c_p)), na.rm = T))+
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0)
 
   mod_c_n = summary(lm(data = dplyr::filter(load_plot, !is.na(mean_c_n), !is.na(mean_c_n_load)),
                        formula = mean_c_n~mean_c_n_load))
@@ -691,7 +709,9 @@ plot_stoich_stream_vs_lake <- function(
     scale_x_log10(limits = range(c(exp(load_plot$mean_c_n_load),
                              exp(load_plot$mean_c_n)),na.rm = T)) +
     scale_y_log10(limits = range(c(exp(load_plot$mean_c_n_load),
-                             exp(load_plot$mean_c_n)), na.rm = T))
+                             exp(load_plot$mean_c_n)), na.rm = T))+
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0)
 
   # load_vs_lake_stoich
   mod_n_p = summary(lm(data = dplyr::filter(load_plot, !is.na(mean_n_p), !is.na(mean_n_p_load)),
@@ -723,9 +743,11 @@ plot_stoich_stream_vs_lake <- function(
     scale_x_log10(limits = range(c(exp(load_plot$mean_n_p_load),
                                    exp(load_plot$mean_n_p)), na.rm=T)) +
     scale_y_log10(limits = range(c(exp(load_plot$mean_n_p_load),
-                                   exp(load_plot$mean_n_p)), na.rm=T))
+                                   exp(load_plot$mean_n_p)), na.rm=T))+
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0)
 
-  g = plot_grid(c_n_load_vs_lake_stoich, c_p_load_vs_lake_stoich, n_p_load_vs_lake_stoich,
+  g = cowplot::plot_grid(c_n_load_vs_lake_stoich, c_p_load_vs_lake_stoich, n_p_load_vs_lake_stoich,
                 labels = c('A', 'B', 'C'), align = 'hv',nrow = 1)
 
   ggsave(out_file,

@@ -46,7 +46,7 @@ p1_targets <- list(
       load_data = p0_load_timeseries_data,
       inlake_data = p0_inlake_nutrient_timeseries_data,
       config = p0_config,
-      out_file = '1_plot/out/stream_lake_stoic_scatter.png'
+      out_file = '1_plot/out/stream_lake_stoich_scatter.png'
     ),
     format = 'file'
   ),
