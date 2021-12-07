@@ -299,7 +299,7 @@ generate_aic_table_inlake <- function(
                                       metab_response == 'R' ~ 'ln(-R)',
                                       TRUE ~ metab_response))
 
-  out = tab_df(x = table_out,
+  out = sjPlot::tab_df(x = table_out,
                col.header = c('Intercept', 'DOC', 'ln(TP)',
                               'ln(TN:TP)', 'AIC', 'R2', 'Response Variable'),
                alternate.rows = T,
@@ -329,7 +329,7 @@ generate_aic_table_load <- function(
                                       metab_response == 'R' ~ 'ln(-R)',
                                       TRUE ~ metab_response))
 
-  out = tab_df(x = table_out,
+  out = sjPlot::tab_df(x = table_out,
                col.header = c('Intercept', 'ln(DOC Load)', 'ln(TP Load)',
                               'ln(TN:TP Load)', 'AIC', 'R2', 'Response Variable'),
                alternate.rows = T,

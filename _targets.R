@@ -7,8 +7,7 @@ tar_option_set(packages = c(
   "yaml",
   "cowplot",
   "MuMIn",
-  "imputeTS",
-  "sjPlot"
+  "imputeTS"
 ))
 
 # Phase target makefiles
