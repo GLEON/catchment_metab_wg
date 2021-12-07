@@ -654,8 +654,8 @@ plot_stoich_stream_vs_lake <- function(
              x = 200, y = 250, angle = 45, size = 6,
              label = '1:1') +
     annotate(geom = 'text',
-             x = 200, y = 5000,
-             label = paste('p-val:',c_p_pval,'\n','R2:', c_p_r2),
+             x = 250, y = 5000,
+             label = paste('p-val < 0.01','\n','R2:', c_p_r2),
              size = 6) +
     scale_x_log10(limits = range(c(exp(load_plot$mean_c_p_load),
                                    exp(load_plot$mean_c_p)), na.rm = T)) +
@@ -685,8 +685,8 @@ plot_stoich_stream_vs_lake <- function(
              x = 2.4, y = 3, angle = 45, size = 6,
              label = '1:1') +
     annotate(geom = 'text',
-             x = 2, y = 40,
-             label = paste('p-val:',c_n_pval,'\n','R2:', c_n_r2),
+             x = 3, y = 50,
+             label = paste('p-val < 0.01','\n','R2:', c_n_r2),
              size = 6) +
     scale_x_log10(limits = range(c(exp(load_plot$mean_c_n_load),
                              exp(load_plot$mean_c_n)),na.rm = T)) +
@@ -731,6 +731,194 @@ plot_stoich_stream_vs_lake <- function(
   ggsave(out_file,
          plot = g,
          width = 12, height = 4)
+  return(out_file)
+}
+
+
+plot_obs_pred_metab_inlake <- function(
+  annual_data,
+  out_file
+){
+  # top GPP model for inlake vs. metab
+  summary(lm(annual_data$mean_gpp ~ annual_data$mean_p))
+
+  annual_data$gpp_preds= exp(predict(lm(annual_data$mean_gpp ~ annual_data$mean_p)))
+
+  # gpp plot
+  gpp = ggplot(annual_data, aes(x = gpp_preds, y = exp(mean_gpp))) +
+    geom_point(size = 6, alpha = .5) +
+    ylab(expression(Observed~GPP~(mg~O[2]~L^-1~day^-1))) +
+    xlab(expression(Predicted~GPP~(mg~O[2]~L^-1~day^-1))) +
+    ylim(range(c(annual_data$gpp_preds, exp(annual_data$mean_gpp)))) +
+    xlim(range(c(annual_data$gpp_preds, exp(annual_data$mean_gpp)))) +
+    theme_classic() +
+    theme(axis.title = element_text(size = 18),
+          axis.text = element_text(size = 18)) +
+    geom_abline(slope = 1, intercept = 0, linetype = 'dashed', size = 1) +
+    annotate(geom = 'text',
+             x = 4, y = 4.6, angle = 45, size = 6,
+             label = '1:1')
+
+  gpp
+
+  # top R model for inlake vs. metab
+  summary(lm(annual_data$mean_r ~ annual_data$mean_p))
+
+  annual_data$r_preds= -exp(predict(lm(annual_data$mean_r ~ annual_data$mean_p)))
+
+  # r plot
+  r = ggplot(annual_data, aes(x = r_preds, y = -exp(mean_r))) +
+    geom_point(size = 6, alpha = .5) +
+    ylab(expression(Observed~R~(mg~O[2]~L^-1~day^-1))) +
+    xlab(expression(Predicted~R~(mg~O[2]~L^-1~day^-1))) +
+    ylim(range(c(annual_data$r_preds, -exp(annual_data$mean_r)))) +
+    xlim(range(c(annual_data$r_preds, -exp(annual_data$mean_r)))) +
+    theme_classic() +
+    theme(axis.title = element_text(size = 18),
+          axis.text = element_text(size = 18)) +
+    geom_abline(slope = 1, intercept = 0, linetype = 'dashed', size = 1) +
+    annotate(geom = 'text',
+             x = -4, y = -3.6, angle = 45, size = 6,
+             label = '1:1')
+
+  r
+
+  # top NEP model for inlake vs. metab
+  summary(lm(annual_data$mean_nep ~ annual_data$mean_n_p))
+
+  annual_data$nep_preds= predict(lm(annual_data$mean_nep ~ annual_data$mean_n_p))
+
+  # nep plot
+  nep = ggplot(annual_data, aes(x = nep_preds, y = mean_nep)) +
+    geom_point(size = 6, alpha = .5) +
+    ylab(expression(Observed~NEP~(mg~O[2]~L^-1~day^-1))) +
+    xlab(expression(Predicted~NEP~(mg~O[2]~L^-1~day^-1))) +
+    ylim(range(c(annual_data$nep_preds, annual_data$mean_nep))) +
+    xlim(range(c(annual_data$nep_preds, annual_data$mean_nep))) +
+    theme_classic() +
+    theme(axis.title = element_text(size = 18),
+          axis.text = element_text(size = 18)) +
+    geom_abline(slope = 1, intercept = 0, linetype = 'dashed', size = 1) +
+    annotate(geom = 'text',
+             x = .3, y = .4, angle = 45, size = 6,
+             label = '1:1')
+
+  nep
+
+  plot_out = cowplot::plot_grid(gpp, r, nep, nrow = 1)
+
+  ggsave(filename = out_file,
+         plot = plot_out, width = 14, height =5 )
+
+  return(out_file)
+}
+
+
+plot_obs_pred_metab_load <- function(
+  annual_data,
+  out_file
+){
+  options(na.action = 'na.omit')
+
+  # top GPP model for load vs. metab
+  summary(lm(annual_data$mean_gpp ~ annual_data$mean_c_load +
+               annual_data$mean_p_load + annual_data$mean_n_p_load))
+
+  gpp_preds = exp(predict(lm(annual_data$mean_gpp ~ annual_data$mean_c_load +
+                               annual_data$mean_p_load + annual_data$mean_n_p_load))) %>%
+    {
+      rows = names(.)
+      gpp_preds = .
+      tibble(rows = rows, gpp_preds = gpp_preds)
+    }
+
+  # merging to get missing lakes in here
+  annual_data$rows = as.character(1:16)
+  annual_data = left_join(annual_data, gpp_preds)
+
+  # gpp plot
+  gpp = ggplot(annual_data, aes(x = gpp_preds, y = exp(mean_gpp))) +
+    geom_point(size = 6, alpha = .5) +
+    ylab(expression(Observed~GPP~(mg~O[2]~L^-1~day^-1))) +
+    xlab(expression(Predicted~GPP~(mg~O[2]~L^-1~day^-1))) +
+    ylim(range(c(annual_data$gpp_preds, exp(annual_data$mean_gpp)),na.rm = T)) +
+    xlim(range(c(annual_data$gpp_preds, exp(annual_data$mean_gpp)),na.rm = T)) +
+    theme_classic() +
+    theme(axis.title = element_text(size = 18),
+          axis.text = element_text(size = 18)) +
+    geom_abline(slope = 1, intercept = 0, linetype = 'dashed', size = 1) +
+    annotate(geom = 'text',
+             x = 4, y = 4.6, angle = 45, size = 6,
+             label = '1:1')
+
+  gpp
+
+  # top R model for load vs. metab
+  summary(lm(annual_data$mean_r ~ annual_data$mean_c_load +
+               annual_data$mean_p_load + annual_data$mean_n_p_load))
+
+  r_preds= -exp(predict(lm(annual_data$mean_r ~ annual_data$mean_c_load +
+                             annual_data$mean_p_load + annual_data$mean_n_p_load))) %>%
+    {
+      rows = names(.)
+      r_preds = .
+      tibble(rows = rows, r_preds = r_preds)
+    }
+
+  # merging to get missing lakes in here
+  annual_data = left_join(annual_data, r_preds)
+
+  # r plot
+  r = ggplot(annual_data, aes(x = r_preds, y = -exp(mean_r))) +
+    geom_point(size = 6, alpha = .5) +
+    ylab(expression(Observed~R~(mg~O[2]~L^-1~day^-1))) +
+    xlab(expression(Predicted~R~(mg~O[2]~L^-1~day^-1))) +
+    ylim(range(c(annual_data$r_preds, -exp(annual_data$mean_r)),na.rm = T)) +
+    xlim(range(c(annual_data$r_preds, -exp(annual_data$mean_r)),na.rm = T)) +
+    theme_classic() +
+    theme(axis.title = element_text(size = 18),
+          axis.text = element_text(size = 18)) +
+    geom_abline(slope = 1, intercept = 0, linetype = 'dashed', size = 1) +
+    annotate(geom = 'text',
+             x = -4, y = -3.6, angle = 45, size = 6,
+             label = '1:1')
+
+  r
+
+  # top NEP model for load vs. metab
+  summary(lm(annual_data$mean_nep ~ annual_data$mean_n_p_load))
+
+  nep_preds= predict(lm(annual_data$mean_nep ~ annual_data$mean_n_p_load)) %>%
+    {
+      rows = names(.)
+      nep_preds = .
+      tibble(rows = rows, nep_preds = nep_preds)
+    }
+
+  # merging to get missing lakes in here
+  annual_data = left_join(annual_data, nep_preds)
+
+  # nep plot
+  nep = ggplot(annual_data, aes(x = nep_preds, y = mean_nep)) +
+    geom_point(size = 6, alpha = .5) +
+    ylab(expression(Observed~NEP~(mg~O[2]~L^-1~day^-1))) +
+    xlab(expression(Predicted~NEP~(mg~O[2]~L^-1~day^-1))) +
+    ylim(range(c(annual_data$nep_preds, annual_data$mean_nep),na.rm = T)) +
+    xlim(range(c(annual_data$nep_preds, annual_data$mean_nep),na.rm = T)) +
+    theme_classic() +
+    theme(axis.title = element_text(size = 18),
+          axis.text = element_text(size = 18)) +
+    geom_abline(slope = 1, intercept = 0, linetype = 'dashed', size = 1) +
+    annotate(geom = 'text',
+             x = .3, y = .4, angle = 45, size = 6,
+             label = '1:1')
+  nep
+
+  plot_out = cowplot::plot_grid(gpp, r, nep, nrow = 1)
+
+  ggsave(filename = out_file,
+         plot = plot_out, width = 14, height =5 )
+
   return(out_file)
 }
 
