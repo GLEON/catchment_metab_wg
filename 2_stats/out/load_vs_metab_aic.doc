@@ -9,20 +9,20 @@
 <th style="border-top: double; text-align:center; font-style:italic; font-weight:normal; padding:0.2cm; border-bottom:1px solid black; col7">Response Variable</th>
 </tr>
 <tr>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">4.09</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">4.05</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">-0.33</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.55</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.6</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">31.48</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.61</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">31.42</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.85</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col7">ln(GPP)</td>
 </tr>
 <tr>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; background-color:#f2f2f2; ">3.46</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; background-color:#f2f2f2; ">3.44</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; background-color:#f2f2f2; ">-0.22</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; background-color:#f2f2f2; ">0.48</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; background-color:#f2f2f2; ">0.8</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; background-color:#f2f2f2; ">34.42</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; background-color:#f2f2f2; ">34.37</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; background-color:#f2f2f2; ">0.82</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; background-color:#f2f2f2; col7">ln(-R)</td>
 </tr>

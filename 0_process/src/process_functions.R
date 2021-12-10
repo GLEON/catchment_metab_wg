@@ -65,7 +65,6 @@ collate_load_timeseries <- function(
   season_cutoff_file
 ){
 
-  browser()
   all_metab = metab_data
 
   cv_cutoff = config$cv_cutoff
@@ -108,7 +107,6 @@ collate_load_timeseries <- function(
 
   all_load <- bind_rows(all_load, no_streams)
 
-  browser()
   season_cutoff <- readRDS(season_cutoff_file) %>%
     select(-doy)# seasonal cutoff based on z-scored schmidt stability
   all_load <- left_join(all_load, season_cutoff, by = c('lake' = 'lake', 'date' = 'date'))
@@ -120,6 +118,23 @@ collate_load_timeseries <- function(
   all_load <- left_join(all_load,
                         dplyr::select(metab_plot, lake, date, mean_gpp),
                         by = c('lake'='lake','date'='date'))
+
+  # The load data for Lilli is from USGS. When looking to see whether there
+  # was any TOC data, I realized that the load data I submitted as DOC was
+  # actually OC measured on an unfiltered sample so was actually TOC.  It
+  # appears that sometimes they filter and sometimes they don't filter the
+  # sample before analyzing - there are two separate parameter codes. I was
+  # able to find a few dates where they have both (but not for 2014).  If
+  # you use an average of all the samples (n=12), DOC is 90% of TOC, the
+  # median is 92%. If you use an average of Jun-Oct (the time window of our
+  # study, n=5), DOC is 93% of TOC, the median is 95%. The range is 80-97%
+  # I don't think this will make a big difference in the results but it seems
+  # like we should correct it. I'm not sure what would be best.
+
+  ## Let's use a scaling factor of 0.93 for Lillinonah C loads
+  all_load <- all_load %>%
+    mutate(DOC_load = case_when(lake == 'Lillinonah' ~ DOC_load * 0.93,
+                                TRUE ~ DOC_load))
 
   return(all_load)
 }

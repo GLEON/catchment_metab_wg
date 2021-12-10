@@ -779,7 +779,9 @@ plot_obs_pred_metab_inlake <- function(
     geom_abline(slope = 1, intercept = 0, linetype = 'dashed', size = 1) +
     annotate(geom = 'text',
              x = 4, y = 4.6, angle = 45, size = 6,
-             label = '1:1')
+             label = '1:1')+
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0)
 
   gpp
 
@@ -801,7 +803,9 @@ plot_obs_pred_metab_inlake <- function(
     geom_abline(slope = 1, intercept = 0, linetype = 'dashed', size = 1) +
     annotate(geom = 'text',
              x = -4, y = -3.6, angle = 45, size = 6,
-             label = '1:1')
+             label = '1:1')+
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0)
 
   r
 
@@ -823,7 +827,9 @@ plot_obs_pred_metab_inlake <- function(
     geom_abline(slope = 1, intercept = 0, linetype = 'dashed', size = 1) +
     annotate(geom = 'text',
              x = .3, y = .4, angle = 45, size = 6,
-             label = '1:1')
+             label = '1:1')+
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0)
 
   nep
 
@@ -871,7 +877,9 @@ plot_obs_pred_metab_load <- function(
     geom_abline(slope = 1, intercept = 0, linetype = 'dashed', size = 1) +
     annotate(geom = 'text',
              x = 4, y = 4.6, angle = 45, size = 6,
-             label = '1:1')
+             label = '1:1')+
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0)
 
   gpp
 
@@ -903,7 +911,9 @@ plot_obs_pred_metab_load <- function(
     geom_abline(slope = 1, intercept = 0, linetype = 'dashed', size = 1) +
     annotate(geom = 'text',
              x = -4, y = -3.6, angle = 45, size = 6,
-             label = '1:1')
+             label = '1:1')+
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0)
 
   r
 
@@ -933,7 +943,10 @@ plot_obs_pred_metab_load <- function(
     geom_abline(slope = 1, intercept = 0, linetype = 'dashed', size = 1) +
     annotate(geom = 'text',
              x = .3, y = .4, angle = 45, size = 6,
-             label = '1:1')
+             label = '1:1')+
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0)
+
   nep
 
   plot_out = cowplot::plot_grid(gpp, r, nep, nrow = 1)
