@@ -75,6 +75,14 @@ p1_targets <- list(
       annual_data = p2_annual_data,
       out_file = '1_plot/out/plot_obs_pred_metab_load.png'
     )
+  ),
+
+  tar_target(
+    p1_plot_gpp_r_png,
+    plot_gpp_r(
+      annual_data = p2_annual_data,
+      out_file = '1_plot/out/plot_gpp_r.png'
+    )
   )
 )
 
