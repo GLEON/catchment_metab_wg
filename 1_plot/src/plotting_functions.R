@@ -957,3 +957,31 @@ plot_obs_pred_metab_load <- function(
   return(out_file)
 }
 
+
+plot_gpp_r <- function(
+  annual_data,
+  out_file
+){
+
+  plot_out = ggplot(annual_data, aes(x = -exp(mean_r), y = exp(mean_gpp))) +
+    geom_point(size = 6, alpha = .5) +
+    ylab(expression(Observed~GPP~(mg~O[2]~L^-1~day^-1))) +
+    xlab(expression(Observed~R~(mg~O[2]~L^-1~day^-1))) +
+    scale_x_reverse() +
+    theme_classic() +
+    theme(axis.title = element_text(size = 18),
+          axis.text = element_text(size = 18)) +
+    geom_abline(slope = 1, intercept = 0, linetype = 'dashed', size = 1) +
+    annotate(geom = 'text',
+             x = -4, y = 4.6, angle = 45, size = 6,
+             label = '1:1')+
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0)
+
+
+  ggsave(filename = out_file,
+         plot = plot_out, width = 6, height =6)
+
+  return(out_file)
+}
+
