@@ -842,6 +842,76 @@ plot_obs_pred_metab_inlake <- function(
 }
 
 
+plot_obs_resid_metab_inlake <- function(
+  annual_data,
+  out_file
+){
+  # residuals for top GPP model for inlake vs. metab
+  annual_data$gpp_resids = resid(lm(annual_data$mean_gpp ~ annual_data$mean_p))
+
+  summary(lm(annual_data$gpp_resids ~ annual_data$mean_c))
+
+  # gpp plot
+  gpp = ggplot(annual_data, aes(x = mean_c, y = gpp_resids)) +
+    geom_point(size = 6, alpha = .5) +
+    xlab(expression(DOC~(mol~C~m^-3))) +
+    ylab(expression(GPP~predicted~by~TP~residuals)) +
+    theme_classic() +
+    theme(axis.title = element_text(size = 18),
+          axis.text = element_text(size = 18)) +
+    geom_abline(slope = 0, intercept = 0, linetype = 'dashed', size = 1) +
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0) +
+    geom_smooth(se = F, method = "lm")
+
+  gpp
+
+  # residuals for top R model for inlake vs. metab
+  annual_data$r_resids = resid(lm(annual_data$mean_r ~ annual_data$mean_p))
+
+  summary(lm(annual_data$r_resids ~ annual_data$mean_c))
+
+  # r plot
+  r = ggplot(annual_data, aes(x = mean_c, y = r_resids)) +
+    geom_point(size = 6, alpha = .5) +
+    xlab(expression(DOC~(mol~C~m^-3))) +
+    ylab(expression(R~predicted~by~TP~residuals)) +
+    theme_classic() +
+    theme(axis.title = element_text(size = 18),
+          axis.text = element_text(size = 18)) +
+    geom_abline(slope = 0, intercept = 0, linetype = 'dashed', size = 1) +
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0) +
+    geom_smooth(se = F, method = "lm")
+
+  r
+
+  # residuals for top NEP model for inlake vs. metab
+  annual_data$nep_resids = resid(lm(annual_data$mean_nep ~ annual_data$mean_n_p))
+
+  # nep plot
+  nep = ggplot(annual_data, aes(x = mean_c, y = nep_resids)) +
+    geom_point(size = 6, alpha = .5) +
+    xlab(expression(DOC~(mol~C~m^-3))) +
+    ylab(expression(NEP~predicted~by~N:P~residuals)) +
+    theme_classic() +
+    theme(axis.title = element_text(size = 18),
+          axis.text = element_text(size = 18)) +
+    geom_abline(slope = 0, intercept = 0, linetype = 'dashed', size = 1) +
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0) +
+    geom_smooth(se = F, method = "lm")
+
+  nep
+
+  plot_out = cowplot::plot_grid(gpp, r, nep, nrow = 1)
+
+  ggsave(filename = out_file,
+         plot = plot_out, width = 14, height =5 )
+
+  return(out_file)
+}
+
 plot_obs_pred_metab_load <- function(
   annual_data,
   out_file
@@ -946,6 +1016,103 @@ plot_obs_pred_metab_load <- function(
              label = '1:1')+
     # adding labels for outliers
     geom_text(aes(label=lake), vjust = 0, hjust = 0)
+
+  nep
+
+  plot_out = cowplot::plot_grid(gpp, r, nep, nrow = 1)
+
+  ggsave(filename = out_file,
+         plot = plot_out, width = 14, height =5 )
+
+  return(out_file)
+}
+
+
+plot_obs_resid_metab_load <- function(
+  annual_data,
+  out_file
+){
+  options(na.action = 'na.omit')
+  # residuals for GPP model for load vs. metab
+  gpp_resids = resid(lm(annual_data$mean_gpp ~ annual_data$mean_p_load +
+                          annual_data$mean_n_p_load)) %>%
+    {
+      rows = names(.)
+      gpp_resids = .
+      tibble(rows = rows, gpp_resids = gpp_resids)
+    }
+
+  # merging to get missing lakes in here
+  annual_data$rows = as.character(1:16)
+  annual_data = left_join(annual_data, gpp_resids)
+
+  # gpp plot
+  gpp = ggplot(annual_data, aes(x = mean_c_load, y = gpp_resids)) +
+    geom_point(size = 6, alpha = .5) +
+    xlab(expression(C~Load~(mol~C~m^-3~day^-1))) +
+    ylab(expression(GPP~predicted~by~P~and~N:P~loads~Resids)) +
+    theme_classic() +
+    theme(axis.title = element_text(size = 18),
+          axis.text = element_text(size = 18)) +
+    geom_abline(slope = 0, intercept = 0, linetype = 'dashed', size = 1) +
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0) +
+    geom_smooth(se = F, method = "lm")
+
+  gpp
+
+  # residuals for R model for load vs. metab
+  r_resids = resid(lm(annual_data$mean_r ~ annual_data$mean_p_load +
+                        annual_data$mean_n_p_load)) %>%
+  {
+      rows = names(.)
+      r_resids = .
+      tibble(rows = rows, r_resids = r_resids)
+    }
+
+  # merging to get missing lakes in here
+  annual_data = left_join(annual_data, r_resids)
+
+  # r plot
+  r = ggplot(annual_data, aes(x = mean_c_load, y = r_resids)) +
+    geom_point(size = 6, alpha = .5) +
+    xlab(expression(C~Load~(mol~C~m^-3~day^-1))) +
+    ylab(expression(R~predicted~by~P~and~N:P~loads~Resids)) +
+    theme_classic() +
+    theme(axis.title = element_text(size = 18),
+          axis.text = element_text(size = 18)) +
+    geom_abline(slope = 0, intercept = 0, linetype = 'dashed', size = 1) +
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0) +
+    geom_smooth(se = F, method = "lm")
+
+  r
+
+  # top NEP model for load vs. metab
+  summary(lm(annual_data$mean_nep ~ annual_data$mean_n_p_load))
+
+  nep_resids= resid(lm(annual_data$mean_nep ~ annual_data$mean_n_p_load)) %>%
+    {
+      rows = names(.)
+      nep_resids = .
+      tibble(rows = rows, nep_resids = nep_resids)
+    }
+
+  # merging to get missing lakes in here
+  annual_data = left_join(annual_data, nep_resids)
+
+  # nep plot
+  nep = ggplot(annual_data, aes(x = mean_c_load, y = nep_resids)) +
+    geom_point(size = 6, alpha = .5) +
+    xlab(expression(C~Load~(mol~C~m^-3~day^-1))) +
+    ylab(expression(NEP~predicted~by~N:P~loads~Resids)) +
+    theme_classic() +
+    theme(axis.title = element_text(size = 18),
+          axis.text = element_text(size = 18)) +
+    geom_abline(slope = 0, intercept = 0, linetype = 'dashed', size = 1) +
+    # adding labels for outliers
+    geom_text(aes(label=lake), vjust = 0, hjust = 0) +
+    geom_smooth(se = F, method = "lm")
 
   nep
 

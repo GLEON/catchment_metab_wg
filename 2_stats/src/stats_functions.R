@@ -77,8 +77,6 @@ summarize_to_annual_and_normalize <- function(
                                metab_data_annual,
                                by = 'lake')
 
-  browser()
-
   # testing for normality
   # metab
   shapiro.test(all_data_annual$mean_gpp) # GPP needs to be transformed ****
