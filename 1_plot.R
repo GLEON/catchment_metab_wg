@@ -83,6 +83,22 @@ p1_targets <- list(
       annual_data = p2_annual_data,
       out_file = '1_plot/out/plot_gpp_r.png'
     )
+  ),
+
+  tar_target(
+    p1_plot_obs_resid_inlake_png,
+    plot_obs_resid_metab_inlake(
+      annual_data = p2_annual_data,
+      out_file = '1_plot/out/plot_obs_resid_metab_inlake.png'
+    )
+  ),
+
+  tar_target(
+    p1_plot_obs_resid_load_png,
+    plot_obs_resid_metab_load(
+      annual_data = p2_annual_data,
+      out_file = '1_plot/out/plot_obs_resid_metab_load.png'
+    )
   )
 )
 
