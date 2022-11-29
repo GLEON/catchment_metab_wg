@@ -145,7 +145,7 @@ collate_inlake_nutrient_timeseries <- function(
 ){
 
   in_lake_nutrients = read_csv(inlake_nutrient_file)
-
+  browser()
   # Lilli doesn't have DOC data; Mendota and Trout have multiple depths => using surface for their nutrients (0 meters)
   in_lake_nutrients = in_lake_nutrients %>%
     dplyr::filter(depth_m %in% c(0,NA)) %>%

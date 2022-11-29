@@ -14,8 +14,12 @@ tar_option_set(packages = c(
 source("0_process.R")
 source("1_plot.R")
 source("2_stats.R")
+source("3_data_release.R")
 
 # Combined list of target outputs
-c(p0_targets, p1_targets, p2_targets)
+c(p0_targets,
+  p1_targets,
+  p2_targets,
+  p3_targets)
 
 

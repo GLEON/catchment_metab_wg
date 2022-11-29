@@ -8,8 +8,6 @@ p2_targets <- list(
 
   # summarize to annual averages, check for normality, and transform if needed.
   #  All ratios are log transformed before calculating the annual average.
-  #  TODO: Currently log transformed c:p, c:n, c:n load, and n:p load are not normal but
-  #  are close to normal checked with shapiro.test() - pval > 0.01 (opinions on what to do?)
   tar_target(
     p2_annual_data,
     summarize_to_annual_and_normalize(
@@ -52,6 +50,22 @@ p2_targets <- list(
     generate_aic_table_load(
       aic_file = p2_lm_load_vs_metab_rds,
       out_file = '2_stats/out/load_vs_metab_aic.doc'
+    )
+  ),
+
+  tar_target(
+    p2_annual_average_supp_table,
+    generate_annual_ave_table(
+      annual_data = p2_annual_data,
+      label_id = p1_lake_label,
+      out_file = "2_stats/out/annual_ave_supp.doc"
+    )
+  ),
+
+  tar_target(
+    p2_metab_coupling,
+    calc_metab_coupling(
+      annual_data = p2_annual_data
     )
   )
 

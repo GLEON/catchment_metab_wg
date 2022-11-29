@@ -1,10 +1,10 @@
 # #Make all data sets extend from startTime to endTime by timeStep
 #Note that for some lakes it may be necessary to aggregate some variables to coarser time scale to get match up
-# 
+#
 # #Round all time down to nearest timeStep (e.g. if timeStep is 5, round 00:07 to 00:05)
 
 
-floorMins <- function(dataIn)
+floorMins <- function(dataIn, timeStep)
 {
   #Pull out datetime column and name it x
   x <- dataIn$datetime
@@ -21,6 +21,7 @@ floorMins <- function(dataIn)
   difs <- abs(as.numeric(x) - matSec)
   #Find the minimum absolute difference in each row and select the corresponding time from matSec
   whichMin <- apply(difs,1,which.min)
+  if(class(whichMin) == "list"){whichMin = unlist(whichMin)}
   rowNames <- as.numeric(rownames(data.frame(whichMin)))
   matIndex <- (whichMin-1)*nRows + rowNames
   matSecFlat <- matrix(matSec,ncol=1)
@@ -30,12 +31,12 @@ floorMins <- function(dataIn)
 }
 
 #Function to find duplicate datetime stamps
-findNotDupRows <- function(dataInName)
+findNotDupRows <- function(dataIn)
 {
   #This function returns the indexes of rows where the datetime is NOT a duplicate
   #of the datetime in a previous row
   #dataInName is character, e.g. "dataPAR"
-  dataIn <- eval(parse(text=dataInName))
+  # dataIn <- eval(parse(text=dataInName))
   #Find duplicated time stamps
   dups <- duplicated(dataIn$datetime)
   #If no duplicated time stamps, notDupRows=all rows in dataIn
@@ -48,7 +49,7 @@ findNotDupRows <- function(dataInName)
   {
     notDupRows <- which(dups==FALSE)
     nDups <- dim(dataIn)[1]-length(notDupRows)
-    print(paste("Warning:",nDups,"rows with duplicate time stamps in",dataInName,"will be removed"))
+    print(paste("Warning:",nDups,"rows with duplicate time stamps in will be removed"))
   }
   #Return dupRows
   return(notDupRows)
