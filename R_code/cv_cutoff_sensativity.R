@@ -4,7 +4,7 @@ library(dplyr)
 
 dir<-'results/metab/20161107/' # directory of metabolism data
 folders<-list.files(dir) %>% # folders in this dir
-  tbl_df() %>%
+  as_tibble() %>%
   dplyr::filter(!grepl('.doc', value)) # get rid of README doc; skipping trout for now --> have to do bootstrapping on this still
 
 all_metab <- lapply(folders$value, function(lake){
@@ -29,8 +29,9 @@ all_metab <- all_metab %>%
 cv_seq <- seq(0, 10, by = 0.25)
 
 cv_sens_out <- tidyr::crossing(all_metab, cv_seq) %>%
-  dplyr::filter(!is.na(season)) %>%
-  dplyr::group_by(lake, cv_seq, season) %>%
+  # dplyr::filter(!is.na(season)) %>%
+  # dplyr::group_by(lake, cv_seq, season) %>%
+  dplyr::group_by(lake, cv_seq) %>%
   dplyr::mutate(total_obs = n()) %>%
   dplyr::filter((GPP_SD/GPP) < cv_seq,
                 (R_SD/-R) < cv_seq) %>%
