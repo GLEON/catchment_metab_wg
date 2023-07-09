@@ -44,10 +44,40 @@ p3_targets <- list(
       return("3_data_release/out/metab_inputs.csv")
     },
     format = "file"
+  ),
+
+  tar_target(
+    p3_raw_stream_nutrient_csv,
+    {
+      folders <- list.files("3_data_release/in/Raw stream nutrient data/")
+      all_input_files <- purrr::map(folders,
+                                    ~ read_csv(sprintf("3_data_release/in/Raw stream nutrient data/%s/%s_streamnutsraw.csv", .x, .x),
+                                               locale = readr::locale(encoding = "UTF-8"), col_types = "cccddd")) %>%
+        bind_rows() %>%
+        mutate(datetime = lubridate::as_datetime(datetime, format = "%m/%d/%Y %H:%M")) %>%
+        rename(Datetime = datetime)
+      write_csv(all_input_files, "3_data_release/out/raw_stream_nutrients.csv")
+      return("3_data_release/out/raw_stream_nutrients.csv")
+    },
+    format = "file"
+  ),
+
+  tar_target(
+    p3_raw_stream_discharge_csv,
+    {
+      folders <- list.files("3_data_release/in/Raw stream discharge data/")
+      all_input_files <- purrr::map(folders,
+                                    ~ read_csv(sprintf("3_data_release/in/Raw stream discharge data/%s/%s_streamQraw.csv", .x, .x),
+                                               locale = readr::locale(encoding = "UTF-8"), col_types = "cccd")) %>%
+        bind_rows() %>%
+        mutate(dateTime = lubridate::as_datetime(dateTime, format = "%m/%d/%Y %H:%M")) %>%
+        rename(Datetime = dateTime)
+      write_csv(all_input_files, "3_data_release/out/raw_stream_discharge.csv")
+      return("3_data_release/out/raw_stream_discharge.csv")
+    },
+    format = "file"
   )
 
-  # TODO: make one file for stream nutrient data - see dropbox folder
-  # TODO: make one file for stream discharge data - see dropbox folder
   # TODO: put all files in google drive
   #
 
