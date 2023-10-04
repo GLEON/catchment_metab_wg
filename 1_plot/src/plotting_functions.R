@@ -995,7 +995,7 @@ plot_stream_lake_stoich_scatter <- function(
 
   g = cowplot::plot_grid(doc_tn, doc_tp, tn_tp, lake_doc_tn, lake_doc_tp, lake_tn_tp,
                 labels = c('A', 'B', 'C', 'D', 'E', 'F'), align = 'hv', nrow = 2)
-
+  browser()
   ggsave(out_file,
          plot = g,
          width = 12, height = 8,
