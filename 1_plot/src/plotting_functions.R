@@ -729,10 +729,10 @@ plot_stream_lake_stoich_scatter <- function(
     if(ratio == 'n_p'){
       if(x_axis_element == 'n'){
         out = tibble(x = seq(x_axis_range[1],x_axis_range[2], length.out = 100))
-        out$y = out$x * (1*31)/(25*14)
+        out$y = out$x * (1*31)/(31*14)
       }else if(x_axis_element == 'p'){
         out = tibble(x = seq(x_axis_range[1],x_axis_range[2], length.out = 100))
-        out$y = out$x * (25*14)/(1*31)
+        out$y = out$x * (31*14)/(1*31)
       }
     }else if(ratio == 'c_p'){
       if(x_axis_element == 'c'){
@@ -848,7 +848,7 @@ plot_stream_lake_stoich_scatter <- function(
                                      x_axis_range = range(load_plot$mean_tp_load *1000*1000*1000,
                                                           na.rm = T)),
               aes(x = x, y = y),
-              linetype = 'dashed') +
+              linetype = 'dotted') +
     geom_point(size = 5, alpha = 0.5, color ='#CC79A7') +
     annotate(geom = 'text',
              x = 1000, y = 100,
@@ -964,7 +964,7 @@ plot_stream_lake_stoich_scatter <- function(
                                      x_axis_element = 'p',
                                      x_axis_range = range(load_plot$mean_lake_tp, na.rm = T)),
               aes(x = x, y = y),
-              linetype = 'dashed') +
+              linetype = 'dotted') +
     geom_point(size = 5, alpha = 0.5, color ='#CC79A7') +
     annotate(geom = 'text',
              x = 50, y = 50,
