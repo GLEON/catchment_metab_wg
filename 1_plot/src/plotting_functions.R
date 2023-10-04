@@ -71,7 +71,8 @@ plot_metab_timeseries <- function(
   ggsave(out_file,
          plot = metab,
          width = 10,
-         height = 10)
+         height = 10,
+         dpi = 400)
 }
 
 
@@ -153,7 +154,8 @@ plot_doc_timeseries <- function(
 
   ggsave(out_file,
          plot = doc_load,
-         width = 10, height = 10)
+         width = 10, height = 10,
+         dpi = 400)
 }
 
 plot_tn_timeseries <- function(
@@ -234,7 +236,8 @@ plot_tn_timeseries <- function(
 
   ggsave(out_file,
          plot = tn_load,
-         width = 10, height = 10)
+         width = 10, height = 10,
+         dpi = 400)
 }
 
 
@@ -316,7 +319,8 @@ plot_tp_timeseries <- function(
 
   ggsave(out_file,
          plot = tp_load,
-         width = 10, height = 10)
+         width = 10, height = 10,
+         dpi = 400)
 }
 
 
@@ -485,7 +489,8 @@ plot_stoich_timeseries <- function(
 
   ggsave(out_file,
          plot = lake_load_stoich,
-         width = 10, height = 10)
+         width = 10, height = 10,
+         dpi = 400)
 }
 
 
@@ -627,7 +632,8 @@ plot_stream_lake_nutrient <- function(
 
   ggsave(out_file,
          plot = g,
-         width = 12, height = 4)
+         width = 12, height = 4,
+         dpi = 400)
   return(out_file)
 }
 
@@ -992,7 +998,8 @@ plot_stream_lake_stoich_scatter <- function(
   browser()
   ggsave(out_file,
          plot = g,
-         width = 12, height = 8)
+         width = 12, height = 8,
+         dpi = 400)
   return(out_file)
 }
 
@@ -1178,7 +1185,8 @@ plot_stoich_stream_vs_lake <- function(
 
   ggsave(out_file,
          plot = g,
-         width = 12, height = 4)
+         width = 12, height = 4,
+         dpi = 400)
   return(out_file)
 }
 
@@ -1262,7 +1270,9 @@ plot_obs_pred_metab_inlake <- function(
   plot_out = cowplot::plot_grid(gpp, r, nep, nrow = 1)
 
   ggsave(filename = out_file,
-         plot = plot_out, width = 14, height =5 )
+         plot = plot_out,
+         width = 14, height =5,
+         dpi = 400)
 
   return(out_file)
 }
@@ -1449,7 +1459,9 @@ plot_obs_pred_metab_load <- function(
   plot_out = cowplot::plot_grid(gpp, r, nep, nrow = 1)
 
   ggsave(filename = out_file,
-         plot = plot_out, width = 14, height =5 )
+         plot = plot_out,
+         width = 14, height =5,
+         dpi = 400)
 
   return(out_file)
 }
@@ -1647,7 +1659,9 @@ plot_models_inlake <- function(
                                            "D", "E"))
 
   ggsave(filename = out_file,
-         plot = plot_out, width = 9, height = 14 )
+         plot = plot_out,
+         width = 9, height = 14,
+         dpi = 350)
 
   return(out_file)
 }
@@ -1816,7 +1830,9 @@ plot_models_load <- function(
                                            "G", "", ""))
 
   ggsave(filename = out_file,
-         plot = plot_out, width = 16, height = 16 )
+         plot = plot_out,
+         width = 16, height = 16,
+         dpi = 300)
 
   return(out_file)
 }
@@ -1872,7 +1888,9 @@ plot_doc_gpp <- function(
     ggrepel::geom_text_repel(aes(label=label_id))
 
   ggsave(filename = out_file,
-         plot = gpp, width = 6, height = 6)
+         plot = gpp,
+         width = 6, height = 6,
+         dpi = 400)
 
   return(out_file)
 }

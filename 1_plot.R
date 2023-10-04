@@ -30,7 +30,7 @@ p1_targets <- list(
       metab_data = p0_metab_timeseries_data,
       season_data = p0_season_cutoff_data,
       config = p0_config,
-      out_file = "1_plot/out/fig_6_metab_timeseries_plot.png"
+      out_file = "1_plot/out/fig_5_metab_timeseries_plot.tiff"
     ),
     format = "file"
   ),
@@ -41,7 +41,7 @@ p1_targets <- list(
       load_data = p0_load_timeseries_data,
       inlake_data = p0_inlake_nutrient_timeseries_data,
       config = p0_config,
-      out_file = "1_plot/out/fig_S3_doc_timeseries_plot.png"
+      out_file = "1_plot/out/fig_S3_doc_timeseries_plot.tiff"
     ),
     format = "file"
   ),
@@ -52,7 +52,7 @@ p1_targets <- list(
       load_data = p0_load_timeseries_data,
       inlake_data = p0_inlake_nutrient_timeseries_data,
       config = p0_config,
-      out_file = "1_plot/out/fig_S1_tp_timeseries_plot.png"
+      out_file = "1_plot/out/fig_S1_tp_timeseries_plot.tiff"
     ),
     format = "file"
   ),
@@ -63,7 +63,7 @@ p1_targets <- list(
       load_data = p0_load_timeseries_data,
       inlake_data = p0_inlake_nutrient_timeseries_data,
       config = p0_config,
-      out_file = "1_plot/out/fig_S2_tn_timeseries_plot.png"
+      out_file = "1_plot/out/fig_S2_tn_timeseries_plot.tiff"
     ),
     format = "file"
   ),
@@ -73,7 +73,7 @@ p1_targets <- list(
       load_data = p0_load_timeseries_data,
       inlake_data = p0_inlake_nutrient_timeseries_data,
       config = p0_config,
-      out_file = '1_plot/out/fig_4_stoich_timeseries_plot.png'
+      out_file = '1_plot/out/fig_S4_stoich_timeseries_plot.tiff'
     ),
     format = 'file'
   ),
@@ -85,7 +85,7 @@ p1_targets <- list(
       inlake_data = p0_inlake_nutrient_timeseries_data,
       config = p0_config,
       label_id = p1_lake_label,
-      out_file = '1_plot/out/fig_2_stream_lake_nutrient_1_1.png'
+      out_file = '1_plot/out/fig_2_stream_lake_nutrient_1_1.tiff'
     ),
     format = 'file'
   ),
@@ -97,7 +97,7 @@ p1_targets <- list(
       inlake_data = p0_inlake_nutrient_timeseries_data,
       config = p0_config,
       label_id = p1_lake_label,
-      out_file = '1_plot/out/fig_3_stream_lake_stoich_scatter.png'
+      out_file = '1_plot/out/fig_3_stream_lake_stoich_scatter.tiff'
     ),
     format = 'file'
   ),
@@ -109,7 +109,7 @@ p1_targets <- list(
       inlake_data = p0_inlake_nutrient_timeseries_data,
       config = p0_config,
       label_id = p1_lake_label,
-      out_file = '1_plot/out/fig_5_plot_stoich_stream_vs_lake.png'
+      out_file = '1_plot/out/fig_4_plot_stoich_stream_vs_lake.tiff'
     )
   ),
 
@@ -118,7 +118,7 @@ p1_targets <- list(
     plot_obs_pred_metab_inlake(
       annual_data = p2_annual_data,
       label_id = p1_lake_label,
-      out_file = '1_plot/out/fig_S4_plot_obs_pred_metab_inlake.png'
+      out_file = '1_plot/out/fig_S5_plot_obs_pred_metab_inlake.tiff'
     )
   ),
 
@@ -127,7 +127,7 @@ p1_targets <- list(
     plot_obs_pred_metab_load(
       annual_data = p2_annual_data,
       label_id = p1_lake_label,
-      out_file = '1_plot/out/fig_S5_plot_obs_pred_metab_load.png'
+      out_file = '1_plot/out/fig_S6_plot_obs_pred_metab_load.tiff'
     )
   ),
 
@@ -160,7 +160,7 @@ p1_targets <- list(
     plot_models_inlake(
       annual_data = p2_annual_data,
       label_id = p1_lake_label,
-      out_file = '1_plot/out/fig_7_inlake_models.png'
+      out_file = '1_plot/out/fig_6_inlake_models.tiff'
     )
   ),
 
@@ -169,7 +169,7 @@ p1_targets <- list(
     plot_models_load(
       annual_data = p2_annual_data,
       label_id = p1_lake_label,
-      out_file = '1_plot/out/fig_8_load_models.png'
+      out_file = '1_plot/out/fig_7_load_models.tiff'
     )
   ),
 
@@ -178,7 +178,7 @@ p1_targets <- list(
     plot_doc_gpp(
       annual_data = p2_annual_data,
       label_id = p1_lake_label,
-      out_file = '1_plot/out/fig_S6_doc_gpp.png'
+      out_file = '1_plot/out/fig_S7_doc_gpp.tiff'
     )
   )
 )
