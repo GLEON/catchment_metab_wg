@@ -71,7 +71,8 @@ plot_metab_timeseries <- function(
   ggsave(out_file,
          plot = metab,
          width = 10,
-         height = 10)
+         height = 10,
+         dpi = 400)
 }
 
 
@@ -153,7 +154,8 @@ plot_doc_timeseries <- function(
 
   ggsave(out_file,
          plot = doc_load,
-         width = 10, height = 10)
+         width = 10, height = 10,
+         dpi = 400)
 }
 
 plot_tn_timeseries <- function(
@@ -234,7 +236,8 @@ plot_tn_timeseries <- function(
 
   ggsave(out_file,
          plot = tn_load,
-         width = 10, height = 10)
+         width = 10, height = 10,
+         dpi = 400)
 }
 
 
@@ -316,7 +319,8 @@ plot_tp_timeseries <- function(
 
   ggsave(out_file,
          plot = tp_load,
-         width = 10, height = 10)
+         width = 10, height = 10,
+         dpi = 400)
 }
 
 
@@ -485,7 +489,8 @@ plot_stoich_timeseries <- function(
 
   ggsave(out_file,
          plot = lake_load_stoich,
-         width = 10, height = 10)
+         width = 10, height = 10,
+         dpi = 400)
 }
 
 
@@ -555,7 +560,7 @@ plot_stream_lake_nutrient <- function(
               color = 'black', se = F, alpha = 0.5) +
     annotate(geom = 'text',
              x = 7, y = 20,
-             label = paste('p-val < 0.01','\n','R2:', doc_r2),
+             label = paste("p = 0.0097","\n", "r² = ", doc_r2),
              size = 6) +
     geom_abline(slope = 1, intercept = 0, linetype = 'dashed')+
     annotate(geom = 'text',
@@ -585,7 +590,7 @@ plot_stream_lake_nutrient <- function(
     geom_abline(slope = 1, intercept = 0, linetype = 'dashed')+
     annotate(geom = 'text',
              x = 300, y = 3000,
-             label = paste('p-val < 0.01','\n','R2:', tn_r2),
+             label = paste('p = 0.0002','\n','r² = ', tn_r2),
              size = 6) +
     annotate(geom = 'text',
              x = 2000, y = 3000, size = 6,
@@ -614,7 +619,7 @@ plot_stream_lake_nutrient <- function(
               color = 'black', se = F, alpha = 0.5) +
     annotate(geom = 'text',
              x = 15, y = 70,
-             label = paste('p-val < 0.01','\n','R2:', tp_r2),
+             label = paste('p = 0.0018','\n','r² = ', tp_r2),
              size = 6) +
     annotate(geom = 'text',
              x = 50, y = 70, size = 6,
@@ -627,7 +632,8 @@ plot_stream_lake_nutrient <- function(
 
   ggsave(out_file,
          plot = g,
-         width = 12, height = 4)
+         width = 12, height = 4,
+         dpi = 400)
   return(out_file)
 }
 
@@ -725,10 +731,42 @@ plot_stream_lake_stoich_scatter <- function(
     return(out)
   }
 
+  redfield_line_2 = function(ratio, x_axis_element, x_axis_range){
+    if(ratio == 'n_p'){
+      if(x_axis_element == 'n'){
+        out = tibble(x = seq(x_axis_range[1],x_axis_range[2], length.out = 100))
+        out$y = out$x * (1*31)/(31*14)
+      }else if(x_axis_element == 'p'){
+        out = tibble(x = seq(x_axis_range[1],x_axis_range[2], length.out = 100))
+        out$y = out$x * (31*14)/(1*31)
+      }
+    }else if(ratio == 'c_p'){
+      if(x_axis_element == 'c'){
+        out = tibble(x = seq(x_axis_range[1],x_axis_range[2], length.out = 100))
+        out$y = out$x * (1*31)/(106*12) * 1000
+      }else if(x_axis_element == 'p'){
+        out = tibble(x = seq(x_axis_range[1],x_axis_range[2], length.out = 100))
+        out$y = out$x / 1000 * (106*12)/(1*31)
+      }
+    }else if(ratio == 'c_n'){
+      if(x_axis_element == 'c'){
+        out = tibble(x = seq(x_axis_range[1],x_axis_range[2], length.out = 100))
+        out$y = out$x * (16*14)/(106*12) * 1000
+      }else if(x_axis_element == 'n'){
+        out = tibble(x = seq(x_axis_range[1],x_axis_range[2], length.out = 100))
+        out$y = out$x / 1000 * (106*12)/(16*14)
+      }
+    }
+    return(out)
+  }
+
   doc_tp_mod <- summary(lm(log10(load_plot$mean_doc_load *1000*1000) ~
                              log10(load_plot$mean_tp_load *1000*1000*1000)))
   doc_tp_pval = round(doc_tp_mod$coefficients[8], digits = 2)
   doc_tp_r2 = round(doc_tp_mod$r.squared, digits = 2)
+  doc_tp_cor = round(cor(log10(load_plot$mean_doc_load *1000*1000),
+                         log10(load_plot$mean_tp_load *1000*1000*1000), use = 'complete.obs'),
+                     digits = 2)
 
   doc_tp <- ggplot(load_plot, aes(y = mean_doc_load *1000*1000, x = mean_tp_load *1000*1000*1000)) +
     geom_line(data = redfield_line(ratio = 'c_p',
@@ -739,7 +777,7 @@ plot_stream_lake_stoich_scatter <- function(
     geom_point(size = 5, alpha = 0.5) +
     annotate(geom = 'text',
              x = 1000, y = 1,
-             label = paste('p-val < 0.01','\n','R2:', doc_tp_r2),
+             label = paste('r = ', doc_tp_cor),
              size = 4.5) +
     annotate(geom = 'text',
              y = 10, x = 420, angle = 42, size = 4.5,
@@ -753,14 +791,17 @@ plot_stream_lake_stoich_scatter <- function(
           legend.text = element_text(size =12)) +
     ylab(expression(DOC~Load~(mg~C~(m^3~lake~water)^-1~day^-1))) +
     xlab(expression(TP~Load~(mu*g~P~(m^3~lake~water)^-1~day^-1)))+ scale_y_log10() + scale_x_log10()+
-    geom_line(stat = "smooth", method = 'lm', size = 1,
-              color = 'black', se = F, alpha = 0.5) +
+    # geom_line(stat = "smooth", method = 'lm', size = 1,
+    #           color = 'black', se = F, alpha = 0.5) +
     ggrepel::geom_text_repel(aes(label=label_id))
 
   doc_tn_mod <- summary(lm(log10(load_plot$mean_doc_load *1000*1000) ~
                              log10(load_plot$mean_tn_load *1000*1000*1000)))
   doc_tn_pval = round(doc_tn_mod$coefficients[8], digits = 2)
   doc_tn_r2 = round(doc_tn_mod$r.squared, digits = 2)
+  doc_tn_cor <- round(cor(log10(load_plot$mean_doc_load *1000*1000),
+                             log10(load_plot$mean_tn_load *1000*1000*1000), use = 'complete.obs'),
+                      digits = 2)
 
   doc_tn <- ggplot(load_plot, aes(y = mean_doc_load *1000*1000, x = mean_tn_load *1000*1000*1000)) +
     # geom_abline(slope = (16*14)/(106*12), intercept = 0, linetype = 'dashed') +
@@ -773,7 +814,7 @@ plot_stream_lake_stoich_scatter <- function(
     geom_point(size = 5, alpha = 0.5, color = '#D55E00') +
     annotate(geom = 'text',
              x = 30000, y = 0.8,
-             label = paste('p-val < 0.01','\n','R2:', doc_tn_r2),
+             label = paste('r = ', doc_tn_cor),
              size = 4.5) +
     annotate(geom = 'text',
              y = 1.5, x = 500, angle = 46, size = 4.5,
@@ -787,14 +828,17 @@ plot_stream_lake_stoich_scatter <- function(
           legend.text = element_text(size =12)) +
     ylab(expression(DOC~Load~(mg~C~(m^3~lake~water)^-1~day^-1))) +
     xlab(expression(TN~Load~(mu*g~N~(m^3~lake~water)^-1~day^-1))) + scale_y_log10() + scale_x_log10()+
-    geom_line(stat = "smooth", method = 'lm', size = 1,
-              color = '#D55E00', se = F, alpha = 0.5) +
+    # geom_line(stat = "smooth", method = 'lm', size = 1,
+    #           color = '#D55E00', se = F, alpha = 0.5) +
     ggrepel::geom_text_repel(aes(label=label_id))
 
   tn_tp_mod <- summary(lm(log10(load_plot$mean_tn_load *1000*1000*1000) ~
                              log10(load_plot$mean_tp_load *1000*1000*1000)))
   tn_tp_pval = round(tn_tp_mod$coefficients[8], digits = 2)
   tn_tp_r2 = round(tn_tp_mod$r.squared, digits = 2)
+  tn_tp_cor <- round(cor(log10(load_plot$mean_tn_load *1000*1000*1000),
+                         log10(load_plot$mean_tp_load *1000*1000*1000), use = 'complete.obs'),
+                     digits = 2)
 
   tn_tp <- ggplot(load_plot, aes(y = mean_tn_load *1000*1000*1000,
                                  x = mean_tp_load *1000*1000*1000)) +
@@ -805,10 +849,16 @@ plot_stream_lake_stoich_scatter <- function(
                                                         na.rm = T)),
               aes(x = x, y = y),
               linetype = 'dashed') +
+    geom_line(data = redfield_line_2(ratio = 'n_p',
+                                     x_axis_element = 'p',
+                                     x_axis_range = range(load_plot$mean_tp_load *1000*1000*1000,
+                                                          na.rm = T)),
+              aes(x = x, y = y),
+              linetype = 'dotted') +
     geom_point(size = 5, alpha = 0.5, color ='#CC79A7') +
     annotate(geom = 'text',
              x = 1000, y = 100,
-             label = paste('p-val < 0.01','\n','R2:', tn_tp_r2),
+             label = paste('r = ', tn_tp_cor),
              size = 4.5) +
     annotate(geom = 'text',
              y = 1500, x = 400, angle = 42, size = 4.5,
@@ -824,14 +874,17 @@ plot_stream_lake_stoich_scatter <- function(
     xlab(expression(TP~Load~(mu*g~P~(m^3~lake~water)^-1~day^-1))) +
     scale_y_log10() + scale_x_log10()+
     # geom_smooth(method = 'lm', color = '#CC79A7', se = F, alpha = 0.5) +
-    geom_line(stat = "smooth", method = "lm",
-              size = 1, alpha = 0.5, color = '#CC79A7') +
+    # geom_line(stat = "smooth", method = "lm",
+    #           size = 1, alpha = 0.5, color = '#CC79A7') +
     ggrepel::geom_text_repel(aes(label=label_id))
 
   lake_doc_tp_mod <- summary(lm(log10(load_plot$mean_lake_doc) ~
                                   log10(load_plot$mean_lake_tp)))
   lake_doc_tp_pval = round(lake_doc_tp_mod$coefficients[8], digits = 2)
   lake_doc_tp_r2 = round(lake_doc_tp_mod$r.squared, digits = 2)
+  lake_doc_tp_cor <- round(cor(log10(load_plot$mean_lake_doc),
+                               log10(load_plot$mean_lake_tp), use = 'complete.obs'),
+                           digits = 2)
 
   lake_doc_tp <- ggplot(load_plot, aes(y = mean_lake_doc, x = mean_lake_tp)) +
     geom_line(data = redfield_line(ratio = 'c_p',
@@ -843,7 +896,7 @@ plot_stream_lake_stoich_scatter <- function(
     geom_point(size = 5, alpha = 0.5) +
     annotate(geom = 'text',
              x = 50, y = 0.3,
-             label = paste('p-val:', lake_doc_tp_pval,'\n','R2:', lake_doc_tp_r2),
+             label = paste('r = ', lake_doc_tp_cor),
              size = 4.5) +
     annotate(geom = 'text',
              y = 0.9, x = 30, angle = 36.5, size = 4.5,
@@ -858,14 +911,17 @@ plot_stream_lake_stoich_scatter <- function(
     ylab(expression(Lake~DOC~(mg~C~L^-1))) +
     xlab(expression(Lake~TP~(mu*g~P~L^-1))) +
     scale_y_log10() + scale_x_log10()+
-    geom_line(stat = "smooth", size = 1, method = 'lm', linetype = "dashed",
-              color = 'black', se = F, alpha = 0.5) +
+    # geom_line(stat = "smooth", size = 1, method = 'lm', linetype = "dashed",
+    #           color = 'black', se = F, alpha = 0.5) +
     ggrepel::geom_text_repel(aes(label=label_id))
 
   lake_doc_tn_mod <- summary(lm(log10(load_plot$mean_lake_doc) ~
                                   log10(load_plot$mean_lake_tn)))
   lake_doc_tn_pval = round(lake_doc_tn_mod$coefficients[8], digits = 2)
   lake_doc_tn_r2 = round(lake_doc_tn_mod$r.squared, digits = 2)
+  lake_doc_tn_cor <- round(cor(log10(load_plot$mean_lake_doc),
+                                 log10(load_plot$mean_lake_tn), use = 'complete.obs'),
+                           digits = 2)
 
   lake_doc_tn <- ggplot(load_plot, aes(y = mean_lake_doc, x = mean_lake_tn)) +
     geom_line(data = redfield_line(ratio = 'c_n',
@@ -877,7 +933,7 @@ plot_stream_lake_stoich_scatter <- function(
     geom_point(size = 5, alpha = 0.5, color = '#D55E00') +
     annotate(geom = 'text',
              x = 2000, y = 1.6,
-             label = paste('p-val:', lake_doc_tn_pval,'\n','R2:', lake_doc_tn_r2),
+             label = paste('r = -0.004'),
              size = 4.5) +
     annotate(geom = 'text',
              y = 2.3, x = 500, angle = 47, size = 4.5,
@@ -892,14 +948,17 @@ plot_stream_lake_stoich_scatter <- function(
     ylab(expression(Lake~DOC~(mg~C~L^-1))) +
     xlab(expression(Lake~TN~(mu*g~N~L^-1)))  +
     scale_y_log10() + scale_x_log10()+
-    geom_line(stat = "smooth", size = 1, method = 'lm', linetype = "dashed",
-              color = '#D55E00', se = F, alpha = 0.5) +
+    # geom_line(stat = "smooth", size = 1, method = 'lm', linetype = "dashed",
+    #           color = '#D55E00', se = F, alpha = 0.5) +
     ggrepel::geom_text_repel(aes(label=label_id))
 
   lake_tn_tp_mod <- summary(lm(log10(load_plot$mean_lake_tn) ~
                                   log10(load_plot$mean_lake_tp)))
   lake_tn_tp_pval = round(lake_tn_tp_mod$coefficients[8], digits = 2)
   lake_tn_tp_r2 = round(lake_tn_tp_mod$r.squared, digits = 2)
+  lake_tn_tp_cor <- round(cor(log10(load_plot$mean_lake_tn),
+                              log10(load_plot$mean_lake_tp), use = 'complete.obs'),
+                          digits = 2)
 
   lake_tn_tp <- ggplot(load_plot, aes(y = mean_lake_tn, x = mean_lake_tp)) +
     geom_line(data = redfield_line(ratio = 'n_p',
@@ -907,10 +966,15 @@ plot_stream_lake_stoich_scatter <- function(
                                    x_axis_range = range(load_plot$mean_lake_tp, na.rm = T)),
               aes(x = x, y = y),
               linetype = 'dashed') +
+    geom_line(data = redfield_line_2(ratio = 'n_p',
+                                     x_axis_element = 'p',
+                                     x_axis_range = range(load_plot$mean_lake_tp, na.rm = T)),
+              aes(x = x, y = y),
+              linetype = 'dotted') +
     geom_point(size = 5, alpha = 0.5, color ='#CC79A7') +
     annotate(geom = 'text',
              x = 50, y = 50,
-             label = paste('p-val < 0.01', '\n','R2:', lake_tn_tp_r2),
+             label = paste('r = ', lake_tn_tp_cor),
              size = 4.5) +
     annotate(geom = 'text',
              y = 150, x = 30, angle = 35, size = 4.5,
@@ -925,8 +989,8 @@ plot_stream_lake_stoich_scatter <- function(
     ylab(expression(Lake~TN~(mu*g~N~L^-1))) +
     xlab(expression(Lake~TP~(mu*g~P~L^-1))) +
     scale_y_log10() + scale_x_log10()+
-    geom_line(stat = "smooth", size = 1, method = 'lm',
-              color = '#CC79A7', se = F, alpha = 0.5) +
+    # geom_line(stat = "smooth", size = 1, method = 'lm',
+    #           color = '#CC79A7', se = F, alpha = 0.5) +
     ggrepel::geom_text_repel(aes(label=label_id))
 
   g = cowplot::plot_grid(doc_tn, doc_tp, tn_tp, lake_doc_tn, lake_doc_tp, lake_tn_tp,
@@ -934,7 +998,8 @@ plot_stream_lake_stoich_scatter <- function(
 
   ggsave(out_file,
          plot = g,
-         width = 12, height = 8)
+         width = 12, height = 8,
+         dpi = 400)
   return(out_file)
 }
 
@@ -1038,7 +1103,7 @@ plot_stoich_stream_vs_lake <- function(
              label = '1:1') +
     annotate(geom = 'text',
              x = 250, y = 5000,
-             label = paste('p-val < 0.01','\n','R2:', c_p_r2),
+             label = paste('p < 0.0001','\n', 'r² = ', c_p_r2),
              size = 4.5) +
     scale_x_log10(limits = range(c(exp(load_plot$mean_c_p_load),
                                    exp(load_plot$mean_c_p)), na.rm = T)) +
@@ -1072,7 +1137,7 @@ plot_stoich_stream_vs_lake <- function(
              label = '1:1') +
     annotate(geom = 'text',
              x = 3, y = 50,
-             label = paste('p-val < 0.01','\n','R2:', c_n_r2),
+             label = paste('p = 0.0002','\n','r² = ', c_n_r2),
              size = 4.5) +
     scale_x_log10(limits = range(c(exp(load_plot$mean_c_n_load),
                              exp(load_plot$mean_c_n)),na.rm = T)) +
@@ -1107,7 +1172,7 @@ plot_stoich_stream_vs_lake <- function(
              label = '1:1') +
     annotate(geom = 'text',
              x = 20, y = 140,
-             label = paste('p-val:',n_p_pval,'\n','R2:', n_p_r2),
+             label = paste('p = 0.48','\n','r² = ', n_p_r2),
              size = 4.5) +
     scale_x_log10(limits = range(c(exp(load_plot$mean_n_p_load),
                                    exp(load_plot$mean_n_p)), na.rm=T)) +
@@ -1120,7 +1185,8 @@ plot_stoich_stream_vs_lake <- function(
 
   ggsave(out_file,
          plot = g,
-         width = 12, height = 4)
+         width = 12, height = 4,
+         dpi = 400)
   return(out_file)
 }
 
@@ -1204,7 +1270,9 @@ plot_obs_pred_metab_inlake <- function(
   plot_out = cowplot::plot_grid(gpp, r, nep, nrow = 1)
 
   ggsave(filename = out_file,
-         plot = plot_out, width = 14, height =5 )
+         plot = plot_out,
+         width = 14, height =5,
+         dpi = 400)
 
   return(out_file)
 }
@@ -1391,7 +1459,9 @@ plot_obs_pred_metab_load <- function(
   plot_out = cowplot::plot_grid(gpp, r, nep, nrow = 1)
 
   ggsave(filename = out_file,
-         plot = plot_out, width = 14, height =5 )
+         plot = plot_out,
+         width = 14, height =5,
+         dpi = 400)
 
   return(out_file)
 }
@@ -1513,7 +1583,7 @@ plot_models_inlake <- function(
                 color = "black", alpha = 0.5) +
     geom_point(size = 6, alpha = .5) +
     xlab(expression(Lake~TP~(mu*g~P~L^-1))) +
-    ylab(expression(Observed~GPP~(mg~O[2]~L^-1~day^-1))) +
+    ylab(expression(GPP~(mg~O[2]~L^-1~day^-1))) +
     theme_classic() +
     theme(axis.title = element_text(size = 16),
           axis.text = element_text(size = 16)) +
@@ -1543,7 +1613,7 @@ plot_models_inlake <- function(
                 color = "black", alpha = 0.5) +
     geom_point(size = 6, alpha = .5) +
     xlab(expression(Lake~TP~(mu*g~P~L^-1))) +
-    ylab(expression(Observed~R~(mg~O[2]~L^-1~day^-1))) +
+    ylab(expression(R~(mg~O[2]~L^-1~day^-1))) +
     theme_classic() +
     theme(axis.title = element_text(size = 16),
           axis.text = element_text(size = 16)) +
@@ -1558,7 +1628,7 @@ plot_models_inlake <- function(
     geom_smooth(se = F, method = "lm", color = "black") +
     geom_point(size = 6, alpha = .5) +
     xlab(expression(N:P~Lake~(mol:mol))) +
-    ylab(expression(Observed~NEP~(mg~O[2]~L^-1~day^-1))) +
+    ylab(expression(NEP~(mg~O[2]~L^-1~day^-1))) +
     theme_classic() +
     theme(axis.title = element_text(size = 16),
           axis.text = element_text(size = 16)) +
@@ -1589,7 +1659,9 @@ plot_models_inlake <- function(
                                            "D", "E"))
 
   ggsave(filename = out_file,
-         plot = plot_out, width = 9, height = 14 )
+         plot = plot_out,
+         width = 9, height = 14,
+         dpi = 350)
 
   return(out_file)
 }
@@ -1619,7 +1691,7 @@ plot_models_load <- function(
                 color = "black", alpha = 0.5) +
     geom_point(size = 6, alpha = .5) +
     xlab(expression(TP~Load~(mu*g~P~(m^3~lake~water)^-1~day^-1))) +
-    ylab(expression(Observed~GPP~(mg~O[2]~L^-1~day^-1))) +
+    ylab(expression(GPP~(mg~O[2]~L^-1~day^-1))) +
     theme_classic() +
     theme(axis.title = element_text(size = 18),
           axis.text = element_text(size = 18)) +
@@ -1681,7 +1753,7 @@ plot_models_load <- function(
                 color = "black", alpha = 0.5) +
     geom_point(size = 6, alpha = .5) +
     xlab(expression(TP~Load~(mu*g~P~(m^3~lake~water)^-1~day^-1))) +
-    ylab(expression(Observed~R~(mg~O[2]~L^-1~day^-1))) +
+    ylab(expression(R~(mg~O[2]~L^-1~day^-1))) +
     theme_classic() +
     theme(axis.title = element_text(size = 18),
           axis.text = element_text(size = 18)) +
@@ -1735,7 +1807,7 @@ plot_models_load <- function(
                 color = "black") +
     geom_point(size = 6, alpha = .5) +
     xlab(expression(N:P~Load~(mol:mol))) +
-    ylab(expression(Observed~NEP~(mg~O[2]~L^-1~day^-1))) +
+    ylab(expression(NEP~(mg~O[2]~L^-1~day^-1))) +
     theme_classic() +
     theme(axis.title = element_text(size = 18),
           axis.text = element_text(size = 18)) +
@@ -1758,7 +1830,9 @@ plot_models_load <- function(
                                            "G", "", ""))
 
   ggsave(filename = out_file,
-         plot = plot_out, width = 16, height = 16 )
+         plot = plot_out,
+         width = 16, height = 16,
+         dpi = 300)
 
   return(out_file)
 }
@@ -1814,7 +1888,9 @@ plot_doc_gpp <- function(
     ggrepel::geom_text_repel(aes(label=label_id))
 
   ggsave(filename = out_file,
-         plot = gpp, width = 6, height = 6)
+         plot = gpp,
+         width = 6, height = 6,
+         dpi = 400)
 
   return(out_file)
 }
