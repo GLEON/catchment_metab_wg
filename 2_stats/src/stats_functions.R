@@ -324,11 +324,13 @@ generate_aic_table_inlake <- function(
     imputeTS::na_replace(fill = '') %>%
     mutate(metab_response = case_when(metab_response == 'GPP' ~ 'ln(GPP)',
                                       metab_response == 'R' ~ 'ln(-R)',
-                                      TRUE ~ metab_response))
+                                      TRUE ~ metab_response)) %>%
+    relocate(metab_response) %>%
+    select(-pval)
 
-  out = sjPlot::tab_df(x = table_out, digits = 3,
-               col.header = c('Intercept', 'DOC', 'ln(TP)',
-                              'ln(TN:TP)', 'AIC', 'R2', 'p-val', 'Response Variable'),
+  out = sjPlot::tab_df(x = table_out, digits = 2,
+               col.header = c('Response Variable', 'Intercept', 'DOC', 'ln(TP)',
+                              'ln(TN:TP)', 'AIC', 'r²'),
                alternate.rows = T,
                file = out_file)
 
@@ -355,11 +357,13 @@ generate_aic_table_load <- function(
     imputeTS::na_replace(fill = '') %>%
     mutate(metab_response = case_when(metab_response == 'GPP' ~ 'ln(GPP)',
                                       metab_response == 'R' ~ 'ln(-R)',
-                                      TRUE ~ metab_response))
+                                      TRUE ~ metab_response)) %>%
+    relocate(metab_response) %>%
+    select(-pval)
 
-  out = sjPlot::tab_df(x = table_out, digits = 3,
-               col.header = c('Intercept', 'ln(DOC Load)', 'ln(TP Load)',
-                              'ln(TN:TP Load)', 'AIC', 'R2', 'p-val', 'Response Variable'),
+  out = sjPlot::tab_df(x = table_out, digits = 2,
+               col.header = c('Response Variable', 'Intercept', 'ln(DOC Load)', 'ln(TP Load)',
+                              'ln(TN:TP Load)', 'AIC', 'r²'),
                alternate.rows = T,
                file = out_file)
 
