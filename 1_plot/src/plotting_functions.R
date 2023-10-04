@@ -1832,7 +1832,7 @@ plot_models_load <- function(
   ggsave(filename = out_file,
          plot = plot_out,
          width = 16, height = 16,
-         dpi = 300)
+         dpi = 301)
 
   return(out_file)
 }
